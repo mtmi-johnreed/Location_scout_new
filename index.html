@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>场景资料图库 · Scene Reference Gallery</title>
+<style>
+  :root {
+    --bg: #f6f5f1;
+    --bg-card: #ffffff;
+    --ink: #1f1d1a;
+    --ink-soft: #5b5853;
+    --ink-faint: #8e8a82;
+    --line: #e7e3da;
+    --accent: #c45a2c;
+    --accent-soft: #f1d9c8;
+    --shadow: 0 1px 2px rgba(28, 25, 20, 0.04), 0 6px 18px rgba(28, 25, 20, 0.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue",
+                 "Segoe UI", "Noto Sans CJK SC", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    padding: 56px 32px 28px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #faf8f3 0%, var(--bg) 100%);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(6px);
+  }
+  header.shrunk { padding: 16px 32px; }
+  header.shrunk h1, header.shrunk .subtitle, header.shrunk .stats { display: none; }
+  header .wrap { max-width: 1280px; margin: 0 auto; }
+  h1 { font-size: 32px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .subtitle { color: var(--ink-soft); font-size: 15px; margin: 0 0 22px; }
+  .stats { display: flex; gap: 28px; flex-wrap: wrap; margin: 0 0 22px; }
+  .stat { display: flex; align-items: baseline; gap: 8px; }
+  .stat .num { font-size: 22px; font-weight: 600; color: var(--accent); }
+  .stat .label { font-size: 13px; color: var(--ink-faint); }
+  .toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .search { flex: 1; min-width: 220px; max-width: 380px; position: relative; }
+  .search input {
+    width: 100%; padding: 10px 14px 10px 38px;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: white; font-size: 14px; font-family: inherit;
+    color: var(--ink); outline: none; transition: border-color 0.15s;
+  }
+  .search input:focus { border-color: var(--accent); }
+  .search svg {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--ink-faint);
+  }
+  .group-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px;
+    background: white; font-size: 13px; color: var(--ink-soft);
+    cursor: pointer; user-select: none; transition: all 0.15s;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  main { max-width: 1280px; margin: 0 auto; padding: 32px; }
+
+  /* Level 1: group */
+  .group { margin-bottom: 56px; scroll-margin-top: 100px; }
+  .group-head {
+    display: flex; align-items: baseline; gap: 12px;
+    margin: 0 0 16px; padding-bottom: 12px; border-bottom: 2px solid var(--ink);
+  }
+  .group-icon { font-size: 24px; }
+  .group-title { font-size: 22px; font-weight: 600; margin: 0; }
+  .group-en { color: var(--ink-faint); font-size: 14px; font-style: italic; }
+  .group-count { margin-left: auto; font-size: 13px; color: var(--ink-faint); }
+
+  /* Level 2: category */
+  .category {
+    margin: 28px 0 36px; padding: 18px 22px 22px;
+    background: var(--bg-card); border: 1px solid var(--line);
+    border-radius: 10px; box-shadow: var(--shadow);
+    scroll-margin-top: 100px;
+  }
+  .cat-head {
+    display: flex; align-items: baseline; gap: 10px;
+    flex-wrap: wrap; margin: 0 0 6px;
+  }
+  .cat-title { font-size: 19px; font-weight: 700; margin: 0; color: var(--ink); }
+  .cat-en { color: var(--ink-faint); font-size: 13px; font-style: italic; }
+  .cat-count {
+    font-size: 12px; color: var(--ink); background: var(--accent-soft);
+    padding: 2px 9px; border-radius: 999px;
+  }
+  .cat-meta { font-size: 12px; color: var(--ink-faint); }
+
+  /* Level 3: location (within a category) */
+  .location {
+    margin: 18px 0 0;
+    padding: 14px 0 4px;
+    border-top: 1px dashed var(--line);
+    scroll-margin-top: 100px;
+  }
+  .location:first-of-type { border-top: none; padding-top: 6px; }
+  .loc-head {
+    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+    margin: 0 0 10px;
+  }
+  .loc-title {
+    font-size: 15px; font-weight: 600; margin: 0;
+    color: var(--accent);
+  }
+  .loc-en { color: var(--ink-faint); font-size: 12.5px; }
+  .loc-count {
+    font-size: 11px; color: var(--ink-soft); background: #f3efe7;
+    padding: 1px 8px; border-radius: 999px;
+  }
+  .loc-multi {
+    font-size: 11px; color: var(--accent); border: 1px solid var(--accent-soft);
+    padding: 1px 7px; border-radius: 999px; background: #fff8f2;
+  }
+
+  /* Level 4: instance (#1 / #2 within a location) */
+  .instance { margin: 6px 0 14px; padding-left: 14px; border-left: 3px solid var(--accent-soft); }
+  .instance.no-label { border-left: none; padding-left: 0; }
+  .inst-head {
+    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+    margin: 0 0 6px;
+  }
+  .inst-label {
+    font-size: 12.5px; font-weight: 700; color: var(--accent);
+    background: #fff; border: 1px solid var(--accent-soft);
+    padding: 1px 8px; border-radius: 4px;
+  }
+  .inst-num { font-size: 11px; color: var(--ink-faint); }
+  .inst-desc {
+    font-size: 12.5px; color: var(--ink-soft); margin: 0 0 8px;
+    line-height: 1.55; max-width: 880px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .tile {
+    background: var(--bg-card); border: 1px solid var(--line);
+    border-radius: 6px; overflow: hidden; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    position: relative;
+  }
+  .tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(28, 25, 20, 0.08), 0 12px 32px rgba(28, 25, 20, 0.1);
+    border-color: var(--accent);
+  }
+  .tile img {
+    display: block; width: 100%; aspect-ratio: 4 / 3;
+    object-fit: cover; background: #eeebe3;
+  }
+  .tile .meta {
+    padding: 6px 8px; font-size: 10.5px; color: var(--ink-faint);
+    border-top: 1px solid var(--line); text-align: center;
+  }
+  .empty { text-align: center; padding: 60px 20px; color: var(--ink-faint); font-size: 14px; }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(15, 13, 10, 0.92);
+    display: none; align-items: center; justify-content: center;
+    z-index: 999; padding: 24px;
+  }
+  .lightbox.active { display: flex; }
+  .lb-inner {
+    max-width: 90vw; max-height: 94vh; display: flex;
+    flex-direction: column; gap: 10px; align-items: center;
+    overflow-y: auto; padding-bottom: 8px;
+  }
+  .lb-img {
+    max-width: 90vw; max-height: 55vh; object-fit: contain;
+    background: #111; border-radius: 4px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+  .lb-caption { color: #f0ece4; font-size: 14px; max-width: 80vw; text-align: center; line-height: 1.5; }
+  .lb-meta { color: #a09c93; font-size: 12px; }
+  .lb-close, .lb-prev, .lb-next {
+    position: absolute; background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white; width: 44px; height: 44px; border-radius: 50%;
+    cursor: pointer; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .lb-close:hover, .lb-prev:hover, .lb-next:hover { background: rgba(255, 255, 255, 0.18); }
+  .lb-close { top: 24px; right: 24px; }
+  .lb-prev { left: 24px; top: 50%; transform: translateY(-50%); }
+  .lb-next { right: 24px; top: 50%; transform: translateY(-50%); }
+
+  /* Index drawer */
+  .toc {
+    margin: 18px 0 0; background: white; border: 1px solid var(--line);
+    border-radius: 8px; padding: 12px 16px; font-size: 13px;
+  }
+  .toc summary {
+    cursor: pointer; font-weight: 600; color: var(--ink-soft);
+    list-style: none; display: flex; align-items: center; gap: 8px;
+  }
+  .toc summary::-webkit-details-marker { display: none; }
+  .toc summary::before { content: "▸"; transition: transform 0.15s; color: var(--ink-faint); }
+  .toc[open] summary::before { transform: rotate(90deg); }
+  .toc-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 6px 18px; margin-top: 12px;
+  }
+  .toc a {
+    color: var(--ink-soft); text-decoration: none;
+    padding: 4px 0; font-size: 12.5px;
+    border-bottom: 1px solid transparent; transition: color 0.15s;
+  }
+  .toc a:hover { color: var(--accent); }
+
+  @media (max-width: 720px) {
+    header { padding: 32px 18px 20px; position: static; }
+    main { padding: 20px 18px; }
+    h1 { font-size: 26px; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; }
+    .category { padding: 14px 14px 18px; }
+    .instance { padding-left: 10px; }
+  }
+
+  /* ── Upload button ── */
+  .upload-btn {
+    padding: 7px 16px; border: none; border-radius: 999px;
+    background: var(--accent); color: white; font-size: 13px;
+    font-family: inherit; cursor: pointer; user-select: none;
+    transition: opacity 0.15s; white-space: nowrap;
+  }
+  .upload-btn:hover { opacity: 0.85; }
+  .github-btn {
+    padding: 7px 13px; border: 1px solid var(--line); border-radius: 999px;
+    background: white; font-size: 13px; font-family: inherit;
+    color: var(--ink-soft); cursor: pointer; user-select: none;
+    display: flex; align-items: center; gap: 5px; transition: all 0.15s; white-space: nowrap;
+  }
+  .github-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .github-btn.connected { border-color: #16a34a; color: #16a34a; }
+  .github-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  /* GitHub config modal */
+  .ghcfg-overlay {
+    position: fixed; inset: 0; background: rgba(15,13,10,0.65);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1300; padding: 24px;
+  }
+  .ghcfg-overlay.active { display: flex; }
+  .ghcfg-dialog {
+    background: white; border-radius: 12px; max-width: 420px; width: 100%;
+    padding: 28px 26px 22px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .ghcfg-dialog h3 { margin: 0; font-size: 16px; font-weight: 600; }
+  .ghcfg-dialog label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 500; color: var(--ink-soft); }
+  .ghcfg-dialog input {
+    padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px;
+    font-size: 14px; font-family: inherit; color: var(--ink); outline: none;
+  }
+  .ghcfg-dialog input:focus { border-color: var(--accent); }
+  .ghcfg-note { font-size: 12px; color: var(--ink-faint); line-height: 1.5; background: #f3efe7; padding: 8px 12px; border-radius: 6px; }
+  .ghcfg-note a { color: var(--accent); }
+  .ghcfg-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+  .ghcfg-status { font-size: 12px; padding: 5px 10px; border-radius: 5px; }
+  .ghcfg-status.ok { background: #dcfce7; color: #16a34a; }
+  .ghcfg-status.err { background: #fee2e2; color: #dc2626; }
+
+  /* ── Status filter row ── */
+  .status-filters {
+    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .filter-label { font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
+  .chip.status-chip.active { background: var(--ink); color: white; border-color: var(--ink); }
+  .chip.status-chip[data-status="备选"].active { background: #d97706; border-color: #d97706; }
+  .chip.status-chip[data-status="确定"].active { background: #16a34a; border-color: #16a34a; }
+
+  /* ── Tile status badge ── */
+  .tile-badge {
+    position: absolute; top: 5px; right: 5px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; padding: 2px 6px; pointer-events: none;
+  }
+  .badge-pending { background: #d97706; color: white; }
+  .badge-confirmed { background: #16a34a; color: white; }
+
+  /* ── Lightbox actions (status + comments) ── */
+  .lb-actions {
+    width: 100%; max-width: 680px; background: rgba(255,255,255,0.05);
+    border-radius: 8px; padding: 14px 18px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .lb-status-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .lb-status-label {
+    font-size: 12px; color: #a09c93; min-width: 54px;
+  }
+  .lb-status-label.is-pending { color: #d97706; font-weight: 600; }
+  .lb-status-label.is-confirmed { color: #4ade80; font-weight: 600; }
+  .lb-action-btn {
+    padding: 5px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08); color: #f0ece4; font-size: 12px;
+    font-family: inherit; cursor: pointer; transition: all 0.15s;
+  }
+  .lb-action-btn:hover { background: rgba(255,255,255,0.18); }
+  .lb-action-btn.active-pending { background: #d97706; border-color: #d97706; color: white; }
+  .lb-action-btn.active-confirmed { background: #16a34a; border-color: #16a34a; color: white; }
+  .lb-comments { display: flex; flex-direction: column; gap: 8px; }
+  .lb-comments-header { font-size: 12px; color: #a09c93; }
+  .lb-comments-list {
+    display: flex; flex-direction: column; gap: 6px;
+    max-height: 160px; overflow-y: auto;
+  }
+  .lb-comment-item {
+    background: rgba(255,255,255,0.07); border-radius: 5px;
+    padding: 6px 10px; font-size: 12px; color: #d6d1c8;
+  }
+  .lb-comment-time { font-size: 10.5px; color: #6b6660; margin-left: 8px; }
+  .lb-comment-input {
+    display: flex; gap: 8px;
+  }
+  .lb-comment-input input {
+    flex: 1; padding: 7px 12px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08);
+    color: #f0ece4; font-size: 13px; font-family: inherit; outline: none;
+  }
+  .lb-comment-input input:focus { border-color: rgba(255,255,255,0.35); }
+  .lb-comment-input button {
+    padding: 7px 14px; border-radius: 6px; border: none;
+    background: var(--accent); color: white; font-size: 13px;
+    font-family: inherit; cursor: pointer;
+  }
+
+  /* ── Upload modal ── */
+  .upload-overlay {
+    position: fixed; inset: 0; background: rgba(15,13,10,0.7);
+    display: none; align-items: center; justify-content: center;
+    z-index: 998; padding: 24px;
+  }
+  .upload-overlay.active { display: flex; }
+  .upload-dialog {
+    background: white; border-radius: 12px; width: 100%; max-width: 560px;
+    max-height: 90vh; display: flex; flex-direction: column;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+  }
+  .upload-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px 14px; border-bottom: 1px solid var(--line);
+  }
+  .upload-header h2 { margin: 0; font-size: 17px; font-weight: 600; }
+  .upload-header button {
+    background: none; border: none; font-size: 22px; cursor: pointer;
+    color: var(--ink-faint); line-height: 1; padding: 0 4px;
+  }
+  .upload-body {
+    overflow-y: auto; padding: 18px 22px; display: flex; flex-direction: column; gap: 16px;
+  }
+  .upload-drop {
+    border: 2px dashed var(--line); border-radius: 8px;
+    padding: 24px; text-align: center; cursor: pointer;
+    position: relative; transition: border-color 0.15s; background: #fafaf8;
+  }
+  .upload-drop:hover, .upload-drop.dragover { border-color: var(--accent); }
+  .upload-drop input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .upload-drop p { margin: 0; color: var(--ink-faint); font-size: 13px; }
+  /* batch preview grid */
+  .upload-file-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px; margin-top: 4px;
+  }
+  .upload-file-item {
+    position: relative; border: 1px solid var(--line); border-radius: 6px;
+    overflow: hidden; background: #fafaf8;
+  }
+  .upload-file-thumb {
+    display: block; width: 100%; aspect-ratio: 4/3; object-fit: cover;
+  }
+  .upload-file-name {
+    width: 100%; padding: 4px 6px; border: none; border-top: 1px solid var(--line);
+    font-size: 11px; font-family: inherit; color: var(--ink); background: white;
+    outline: none; box-sizing: border-box;
+  }
+  .upload-file-name:focus { border-color: var(--accent); }
+  .upload-file-remove {
+    position: absolute; top: 3px; right: 3px; width: 18px; height: 18px;
+    border-radius: 50%; background: rgba(0,0,0,0.55); color: white;
+    border: none; cursor: pointer; font-size: 11px; line-height: 18px;
+    text-align: center; padding: 0; display: flex; align-items: center; justify-content: center;
+  }
+  .upload-count-badge {
+    display: inline-block; background: var(--accent); color: white;
+    border-radius: 999px; font-size: 12px; font-weight: 600;
+    padding: 2px 10px; margin-top: 6px;
+  }
+  .upload-progress-bar {
+    height: 3px; background: var(--accent-soft); border-radius: 2px; margin-top: 6px; overflow: hidden;
+  }
+  .upload-progress-fill {
+    height: 100%; background: var(--accent); border-radius: 2px;
+    transition: width 0.2s; width: 0%;
+  }
+  .upload-progress-label { font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+  .upload-form { display: flex; flex-direction: column; gap: 12px; }
+  .upload-form label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 500; color: var(--ink-soft); }
+  .upload-form select, .upload-form input[type="text"], .upload-form textarea {
+    padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px;
+    font-size: 14px; font-family: inherit; color: var(--ink);
+    background: white; outline: none; transition: border-color 0.15s;
+  }
+  .upload-form select:focus, .upload-form input:focus, .upload-form textarea:focus {
+    border-color: var(--accent);
+  }
+  .upload-form textarea { min-height: 72px; resize: vertical; }
+  .custom-input { margin-top: 6px; }
+  .upload-footer {
+    padding: 14px 22px; border-top: 1px solid var(--line);
+    display: flex; justify-content: flex-end; gap: 10px;
+  }
+  .btn-primary {
+    padding: 9px 22px; background: var(--accent); color: white;
+    border: none; border-radius: 8px; font-size: 14px; font-family: inherit;
+    cursor: pointer; font-weight: 500;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-secondary {
+    padding: 9px 18px; background: white; color: var(--ink-soft);
+    border: 1px solid var(--line); border-radius: 8px; font-size: 14px;
+    font-family: inherit; cursor: pointer;
+  }
+
+  /* ── Toast notification ── */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #1f1d1a; color: #f0ece4; border-radius: 10px;
+    padding: 14px 20px; font-size: 13px; max-width: 480px; width: calc(100% - 48px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35); opacity: 0;
+    transition: opacity 0.25s, transform 0.25s; z-index: 1100; line-height: 1.55;
+  }
+  .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast-code {
+    display: block; margin-top: 8px; background: rgba(255,255,255,0.1);
+    padding: 6px 10px; border-radius: 5px; font-family: monospace; font-size: 12px;
+    user-select: all;
+  }
+
+  /* ── Uploaded images section within category ── */
+  .uploaded-section { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--accent-soft); }
+  .uploaded-section-head {
+    font-size: 12px; color: var(--accent); font-weight: 600;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+
+  /* ── Delete button in lightbox ── */
+  .lb-action-btn.lb-btn-delete {
+    margin-left: auto; background: rgba(220, 38, 38, 0.12);
+    border-color: rgba(220, 38, 38, 0.35); color: #f87171;
+  }
+  .lb-action-btn.lb-btn-delete:hover { background: rgba(220, 38, 38, 0.28); border-color: #f87171; }
+
+  /* ── Confirmation dialog ── */
+  .confirm-overlay {
+    position: fixed; inset: 0; background: rgba(15,13,10,0.65);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1200; padding: 24px;
+  }
+  .confirm-overlay.active { display: flex; }
+  .confirm-dialog {
+    background: white; border-radius: 12px; max-width: 380px; width: 100%;
+    padding: 28px 26px 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .confirm-dialog h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--ink); }
+  .confirm-dialog p { margin: 0; font-size: 13.5px; color: var(--ink-soft); line-height: 1.55; }
+  .confirm-dialog .confirm-photo-name {
+    font-size: 12px; color: var(--ink-faint); background: #f3efe7;
+    padding: 5px 10px; border-radius: 5px; word-break: break-all;
+  }
+  .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-danger {
+    padding: 9px 20px; background: #dc2626; color: white;
+    border: none; border-radius: 8px; font-size: 14px; font-family: inherit;
+    cursor: pointer; font-weight: 500;
+  }
+  .btn-danger:hover { background: #b91c1c; }
+</style>
+</head>
+<body>
+
+<header id="header">
+  <div class="wrap">
+    <h1>场景资料图库</h1>
+    <p class="subtitle">Scene Reference Gallery — 大类 ▸ 场景 ▸ 地点 ▸（同名地点用 #1/#2 区分）</p>
+    <div class="stats" id="stats"></div>
+    <div class="toolbar">
+      <div class="search">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="7" cy="7" r="5"/>
+          <path d="M11 11l3 3"/>
+        </svg>
+        <input id="search" type="text" placeholder="搜索地名、场景、文件… (Search)">
+      </div>
+      <div class="group-filters" id="group-filters"></div>
+      <button class="upload-btn" id="upload-btn">＋ 上传图片</button>
+      <button class="github-btn" id="github-btn"><span class="github-dot"></span><span id="github-btn-label">GitHub 同步</span></button>
+    </div>
+    <div class="status-filters" id="status-filters">
+      <span class="filter-label">视图：</span>
+      <div class="chip status-chip active" data-status="all">全部</div>
+      <div class="chip status-chip" data-status="未筛选">未筛选</div>
+      <div class="chip status-chip" data-status="备选">备选</div>
+      <div class="chip status-chip" data-status="确定">确定</div>
+    </div>
+    <details class="toc" id="toc">
+      <summary>目录索引 · Index of all locations</summary>
+      <div class="toc-grid" id="toc-grid"></div>
+    </details>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lb-close" aria-label="Close">×</button>
+  <button class="lb-prev" id="lb-prev" aria-label="Previous">‹</button>
+  <button class="lb-next" id="lb-next" aria-label="Next">›</button>
+  <div class="lb-inner">
+    <img class="lb-img" id="lb-img" alt="">
+    <div class="lb-caption" id="lb-caption"></div>
+    <div class="lb-meta" id="lb-meta"></div>
+    <div class="lb-actions" id="lb-actions">
+      <div class="lb-status-row">
+        <span class="lb-status-label" id="lb-status-label">未筛选</span>
+        <button class="lb-action-btn" id="lb-btn-pending">加入备选</button>
+        <button class="lb-action-btn" id="lb-btn-confirm">确定</button>
+        <button class="lb-action-btn" id="lb-btn-reset" style="font-size:11px;opacity:0.6;">重置</button>
+        <button class="lb-action-btn lb-btn-delete" id="lb-btn-delete">🗑 删除</button>
+      </div>
+      <div class="lb-comments">
+        <div class="lb-comments-header" id="lb-comments-header">评论 Comments</div>
+        <div class="lb-comments-list" id="lb-comments-list"></div>
+        <div class="lb-comment-input">
+          <input id="lb-comment-text" placeholder="添加评论… (Add a comment)">
+          <button id="lb-comment-submit">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="upload-overlay" id="upload-overlay">
+  <div class="upload-dialog">
+    <div class="upload-header">
+      <h2>上传图片 · Upload Photo</h2>
+      <button id="upload-close">×</button>
+    </div>
+    <div class="upload-body">
+      <div class="upload-drop" id="upload-drop">
+        <input type="file" id="upload-file" accept="image/*" multiple>
+        <p id="upload-drop-hint">点击选择或拖拽图片（支持多选）· Click or drag, multi-select OK</p>
+        <div id="upload-file-grid" class="upload-file-grid"></div>
+        <div id="upload-count-wrap" style="display:none;">
+          <span class="upload-count-badge" id="upload-count-badge"></span>
+        </div>
+        <div class="upload-progress-bar" id="upload-progress-bar" style="display:none;">
+          <div class="upload-progress-fill" id="upload-progress-fill"></div>
+        </div>
+        <div class="upload-progress-label" id="upload-progress-label"></div>
+      </div>
+      <div class="upload-form">
+        <label>大类 Group
+          <select id="up-group"><option value="">请选择…</option></select>
+          <input type="text" id="up-group-custom" class="custom-input" placeholder="输入自定义大类名…" style="display:none;">
+        </label>
+        <label>场景 Category
+          <select id="up-cat" disabled><option value="">请先选择大类…</option></select>
+          <input type="text" id="up-cat-custom" class="custom-input" placeholder="输入自定义场景名…" style="display:none;">
+        </label>
+        <label>地点 Location
+          <select id="up-loc" disabled><option value="">请先选择场景…</option></select>
+          <input type="text" id="up-loc-custom" class="custom-input" placeholder="输入自定义地点名…" style="display:none;">
+        </label>
+        <label>批量备注 Notes（所有图片共享）
+          <textarea id="up-notes" placeholder="可选备注，对本次所有上传图片生效…"></textarea>
+        </label>
+      </div>
+    </div>
+    <div class="upload-footer">
+      <button class="btn-secondary" id="upload-cancel">取消</button>
+      <button class="btn-primary" id="upload-submit" disabled>请先选择图片</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="ghcfg-overlay" id="ghcfg-overlay">
+  <div class="ghcfg-dialog">
+    <h3>⚙ GitHub 同步设置</h3>
+    <div class="ghcfg-note">
+      需要一个有 <strong>repo</strong> 权限的 Personal Access Token（PAT）。
+      在 GitHub → Settings → Developer settings → Personal access tokens 创建。
+      Token 仅存在本地浏览器（localStorage），请勿在公共设备上使用。
+    </div>
+    <label>Personal Access Token
+      <input type="password" id="ghcfg-token" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+    </label>
+    <label>仓库 Repository（owner/repo）
+      <input type="text" id="ghcfg-repo" placeholder="lexi-44/DLAG-location_scout">
+    </label>
+    <label>分支 Branch
+      <input type="text" id="ghcfg-branch" placeholder="main">
+    </label>
+    <div id="ghcfg-status" class="ghcfg-status" style="display:none;"></div>
+    <div class="ghcfg-actions">
+      <button class="btn-secondary" id="ghcfg-cancel">关闭</button>
+      <button class="btn-secondary" id="ghcfg-test">测试连接</button>
+      <button class="btn-primary" id="ghcfg-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-dialog">
+    <h3>确认删除 · Confirm Delete</h3>
+    <p>删除后该图片将从图库中移除，无法恢复。如需同步至 GitHub，请在弹出提示后运行对应的 git 命令。</p>
+    <div class="confirm-photo-name" id="confirm-photo-name"></div>
+    <div class="confirm-actions">
+      <button class="btn-secondary" id="confirm-cancel">取消</button>
+      <button class="btn-danger" id="confirm-ok">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = {"groups": {"outdoor_road": {"title_zh": "道路与公路类", "title_en": "Roads & Highways", "icon": "🛣️", "items": ["small_road", "road_branch", "urban_highway", "highway", "tunnel", "highway_service"]}, "exterior_open": {"title_zh": "户外开放空间", "title_en": "Open / Outdoor Spaces", "icon": "🌾", "items": ["parking_lot", "wasteland"]}, "industrial": {"title_zh": "工业与物流", "title_en": "Industrial & Logistics", "icon": "🏭", "items": ["factory", "warehouse"]}, "residential": {"title_zh": "居住建筑", "title_en": "Residential", "icon": "🏠", "items": ["yingzi_house", "ren_house", "wang_villa"]}, "public": {"title_zh": "公共建筑", "title_en": "Public Buildings", "icon": "🏫", "items": ["yingzi_school", "arcade", "bookstore", "luna_park"]}}, "categories": {"small_road": {"key": "small_road", "name_zh": "公路（高美古路）", "name_en": "Small Roads", "source": "公路（高美古路）Small Roads for driving with dialogue scenes.docx", "image_count": 7, "locations": [{"title": "公路（高美古路）", "base": "公路", "location": "高美古路", "instances": [{"label": "", "seq": null, "desc": "1.公路（高美古路）——路程：30公里，45分钟。1. Highway (Gaomei Ancient Road) — Distance: 30 km, 45 minutes. · 地点：丽江西南", "images": [{"src": "images/small_road/small_road_01.jpeg", "filename": "small_road_01.jpeg", "size": 122262, "thumb": "thumbs/small_road/small_road_01.jpg"}, {"src": "images/small_road/small_road_02.jpeg", "filename": "small_road_02.jpeg", "size": 140091, "thumb": "thumbs/small_road/small_road_02.jpg"}, {"src": "images/small_road/small_road_03.jpeg", "filename": "small_road_03.jpeg", "size": 123277, "thumb": "thumbs/small_road/small_road_03.jpg"}, {"src": "images/small_road/small_road_04.jpeg", "filename": "small_road_04.jpeg", "size": 129545, "thumb": "thumbs/small_road/small_road_04.jpg"}, {"src": "images/small_road/small_road_05.jpeg", "filename": "small_road_05.jpeg", "size": 111634, "thumb": "thumbs/small_road/small_road_05.jpg"}, {"src": "images/small_road/small_road_06.jpeg", "filename": "small_road_06.jpeg", "size": 145767, "thumb": "thumbs/small_road/small_road_06.jpg"}, {"src": "images/small_road/small_road_07.jpeg", "filename": "small_road_07.jpeg", "size": 115380, "thumb": "thumbs/small_road/small_road_07.jpg"}]}], "title_en": "Gaomei Ancient Road"}], "instance_count": 1}, "highway": {"key": "highway", "name_zh": "高速公路", "name_en": "Highway", "source": "高速公路 Highways.docx", "image_count": 11, "locations": [{"title": "高速路（大丽高速，九河方西）", "base": "高速路", "location": "大丽高速，九河方西", "instances": [{"label": "", "seq": null, "desc": "高速路（大丽高速，九河方西）——路程10公里，20分钟。 · 高速公路（九河方向）", "images": [{"src": "images/highway/highway_01.jpeg", "filename": "highway_01.jpeg", "size": 88783, "thumb": "thumbs/highway/highway_01.jpg"}, {"src": "images/highway/highway_02.jpeg", "filename": "highway_02.jpeg", "size": 137380, "thumb": "thumbs/highway/highway_02.jpg"}, {"src": "images/highway/highway_03.jpeg", "filename": "highway_03.jpeg", "size": 129681, "thumb": "thumbs/highway/highway_03.jpg"}, {"src": "images/highway/highway_04.jpeg", "filename": "highway_04.jpeg", "size": 132967, "thumb": "thumbs/highway/highway_04.jpg"}, {"src": "images/highway/highway_05.jpeg", "filename": "highway_05.jpeg", "size": 380748, "thumb": "thumbs/highway/highway_05.jpg"}, {"src": "images/highway/highway_06.jpeg", "filename": "highway_06.jpeg", "size": 421004, "thumb": "thumbs/highway/highway_06.jpg"}, {"src": "images/highway/highway_07.jpeg", "filename": "highway_07.jpeg", "size": 819510, "thumb": "thumbs/highway/highway_07.jpg"}]}], "title_en": "Da-Li Expressway, Jiuhe direction"}, {"title": "高速公路（靠近丽江城）", "base": "高速公路", "location": "靠近丽江城", "instances": [{"label": "", "seq": null, "desc": "4.高速公路（靠近丽江城）——路程：5公里，10分钟 · 地点：都在丽江西。", "images": [{"src": "images/highway/highway_08.png", "filename": "highway_08.png", "size": 751131, "thumb": "thumbs/highway/highway_08.jpg"}, {"src": "images/highway/highway_09.jpeg", "filename": "highway_09.jpeg", "size": 51488, "thumb": "thumbs/highway/highway_09.jpg"}, {"src": "images/highway/highway_10.jpeg", "filename": "highway_10.jpeg", "size": 1881851, "thumb": "thumbs/highway/highway_10.jpg"}, {"src": "images/highway/highway_11.jpeg", "filename": "highway_11.jpeg", "size": 66222, "thumb": "thumbs/highway/highway_11.jpg"}]}], "title_en": "Near Lijiang City"}], "instance_count": 2}, "road_branch": {"key": "road_branch", "name_zh": "公路岔路口", "name_en": "Road With a Branch", "source": "公路岔路口 Road with a branch sc 106 or 139.docx", "image_count": 15, "locations": [{"title": "公路（高美古路/红麦路）", "base": "公路", "location": "高美古路/红麦路", "instances": [{"label": "", "seq": null, "desc": "1.公路（高美古路/红麦路）——路程32公里，45分钟。 · 夜景还未看过。 · 地点：丽江西南。", "images": [{"src": "images/road_branch/road_branch_01.jpeg", "filename": "road_branch_01.jpeg", "size": 161049, "thumb": "thumbs/road_branch/road_branch_01.jpg"}, {"src": "images/road_branch/road_branch_02.jpeg", "filename": "road_branch_02.jpeg", "size": 202755, "thumb": "thumbs/road_branch/road_branch_02.jpg"}, {"src": "images/road_branch/road_branch_03.jpeg", "filename": "road_branch_03.jpeg", "size": 146009, "thumb": "thumbs/road_branch/road_branch_03.jpg"}, {"src": "images/road_branch/road_branch_04.jpeg", "filename": "road_branch_04.jpeg", "size": 144132, "thumb": "thumbs/road_branch/road_branch_04.jpg"}, {"src": "images/road_branch/road_branch_05.jpeg", "filename": "road_branch_05.jpeg", "size": 147314, "thumb": "thumbs/road_branch/road_branch_05.jpg"}]}], "title_en": "Gaomei / Hongmai Road"}, {"title": "公路（玉龙县文华段）", "base": "公路", "location": "玉龙县文华段", "instances": [{"label": "", "seq": null, "desc": "2.公路（玉龙县文华段）——路程：9公里，20分钟。 · 这个岔路口，有一条较窄的水泥路。周边环境不太理想，透过树林能看到丽江城市。 · 地点：丽江西。At this fork in the road, there is a relatively narrow cement road. The surrounding environment is not very ideal, and through the trees, you can see the city of Lijiang. · Location: West of Lijiang.", "images": [{"src": "images/road_branch/road_branch_06.jpeg", "filename": "road_branch_06.jpeg", "size": 167996, "thumb": "thumbs/road_branch/road_branch_06.jpg"}, {"src": "images/road_branch/road_branch_07.jpeg", "filename": "road_branch_07.jpeg", "size": 164325, "thumb": "thumbs/road_branch/road_branch_07.jpg"}, {"src": "images/road_branch/road_branch_08.jpeg", "filename": "road_branch_08.jpeg", "size": 184409, "thumb": "thumbs/road_branch/road_branch_08.jpg"}, {"src": "images/road_branch/road_branch_09.jpeg", "filename": "road_branch_09.jpeg", "size": 138848, "thumb": "thumbs/road_branch/road_branch_09.jpg"}, {"src": "images/road_branch/road_branch_10.jpeg", "filename": "road_branch_10.jpeg", "size": 164370, "thumb": "thumbs/road_branch/road_branch_10.jpg"}]}], "title_en": "Yulong County, Wenhua section"}, {"title": "岔路口（高美古路）", "base": "岔路口", "location": "高美古路", "instances": [{"label": "", "seq": null, "desc": "", "images": [{"src": "images/road_branch/road_branch_11.jpeg", "filename": "road_branch_11.jpeg", "size": 85548, "thumb": "thumbs/road_branch/road_branch_11.jpg"}, {"src": "images/road_branch/road_branch_12.jpeg", "filename": "road_branch_12.jpeg", "size": 549451, "thumb": "thumbs/road_branch/road_branch_12.jpg"}, {"src": "images/road_branch/road_branch_13.jpeg", "filename": "road_branch_13.jpeg", "size": 1033914, "thumb": "thumbs/road_branch/road_branch_13.jpg"}, {"src": "images/road_branch/road_branch_14.jpeg", "filename": "road_branch_14.jpeg", "size": 1257921, "thumb": "thumbs/road_branch/road_branch_14.jpg"}, {"src": "images/road_branch/road_branch_15.jpeg", "filename": "road_branch_15.jpeg", "size": 170008, "thumb": "thumbs/road_branch/road_branch_15.jpg"}]}], "title_en": "Gaomei Road Branch"}], "instance_count": 3}, "tunnel": {"key": "tunnel", "name_zh": "隧道", "name_en": "Tunnel", "source": "隧道Tunnel.docx", "image_count": 8, "locations": [{"title": "隧道（魔岩山隧道）", "base": "隧道", "location": "魔岩山隧道", "instances": [{"label": "", "seq": null, "desc": "1.隧道（魔岩山隧道）——路程：18公里，25分钟。2. Tunnel (Moyan Mountain Tunnel)——Distance: 18 km, driving time: 25 minutes · 单向双车道，全长1.5公里。 · One-way dual carriageway, 1.5 kilometers long. · 地点：丽江南South of Lijiang", "images": [{"src": "images/tunnel/tunnel_01.png", "filename": "tunnel_01.png", "size": 275294, "thumb": "thumbs/tunnel/tunnel_01.jpg"}, {"src": "images/tunnel/tunnel_02.jpeg", "filename": "tunnel_02.jpeg", "size": 20684, "thumb": "thumbs/tunnel/tunnel_02.jpg"}]}], "title_en": "Moyan Mountain Tunnel"}, {"title": "隧道（石金山隧道）", "base": "隧道", "location": "石金山隧道", "instances": [{"label": "", "seq": null, "desc": "2.隧道（石金山隧道）——路程25公里，40分钟。 · 地点：丽江西", "images": [{"src": "images/tunnel/tunnel_03.png", "filename": "tunnel_03.png", "size": 337276, "thumb": "thumbs/tunnel/tunnel_03.jpg"}, {"src": "images/tunnel/tunnel_04.png", "filename": "tunnel_04.png", "size": 3132833, "thumb": "thumbs/tunnel/tunnel_04.jpg"}, {"src": "images/tunnel/tunnel_05.jpeg", "filename": "tunnel_05.jpeg", "size": 49537, "thumb": "thumbs/tunnel/tunnel_05.jpg"}]}], "title_en": "Shijinshan Tunnel"}, {"title": "隧道（黄山隧道）", "base": "隧道", "location": "黄山隧道", "instances": [{"label": "", "seq": null, "desc": "3.隧道（黄山隧道）——路程：10公里，20分钟。 · 地点：丽江西 · 目前在丽江看到的高速公路隧道都是单向隧道。All expressway tunnels I have seen in Lijiang so far are one-way tunnels.", "images": [{"src": "images/tunnel/tunnel_06.jpeg", "filename": "tunnel_06.jpeg", "size": 49003, "thumb": "thumbs/tunnel/tunnel_06.jpg"}, {"src": "images/tunnel/tunnel_07.jpeg", "filename": "tunnel_07.jpeg", "size": 112124, "thumb": "thumbs/tunnel/tunnel_07.jpg"}]}], "title_en": "Huangshan Tunnel"}, {"title": "白沙镇（丽江北）", "base": "白沙镇", "location": "丽江北", "instances": [{"label": "", "seq": null, "desc": "1.白沙镇——路程8公里，15分钟。1. Baisha Town — Distance: 8 km, 15 minutes · . · 地点：丽江北 North Lijiang", "images": [{"src": "images/tunnel/tunnel_08.jpeg", "filename": "tunnel_08.jpeg", "size": 37113, "thumb": "thumbs/tunnel/tunnel_08.jpg"}]}], "title_en": "Baisha Town Underpass (N. Lijiang)"}], "instance_count": 4}, "factory": {"key": "factory", "name_zh": "宝亮工厂", "name_en": "Baoliang's Factory", "source": "宝亮工厂Baoliang's Factory.docx", "image_count": 48, "locations": [{"title": "废弃水泥厂（关丽路）", "base": "废弃水泥厂", "location": "关丽路", "instances": [{"label": "", "seq": null, "desc": "1.废弃水泥厂（关丽路）——路程10公里，20分钟 3. Abandoned Cement Plant (Guanli Road) — Distance: 10 km, driving time: 20 minutes · 废弃水泥厂在这个园区里面，水泥厂及周围太杂乱。Abandonned = GREAT!!!!!!! · 地点：丽江南South of Lijiang", "images": [{"src": "images/factory/factory_01.jpeg", "filename": "factory_01.jpeg", "size": 27862, "thumb": "thumbs/factory/factory_01.jpg"}, {"src": "images/factory/factory_02.jpeg", "filename": "factory_02.jpeg", "size": 55840, "thumb": "thumbs/factory/factory_02.jpg"}, {"src": "images/factory/factory_03.jpeg", "filename": "factory_03.jpeg", "size": 63991, "thumb": "thumbs/factory/factory_03.jpg"}, {"src": "images/factory/factory_04.jpeg", "filename": "factory_04.jpeg", "size": 35336, "thumb": "thumbs/factory/factory_04.jpg"}, {"src": "images/factory/factory_05.jpeg", "filename": "factory_05.jpeg", "size": 51340, "thumb": "thumbs/factory/factory_05.jpg"}, {"src": "images/factory/factory_06.jpeg", "filename": "factory_06.jpeg", "size": 37139, "thumb": "thumbs/factory/factory_06.jpg"}]}], "title_en": "Abandoned Cement Plant (Guanli Rd)"}, {"title": "砂石厂（丽江东）", "base": "砂石厂", "location": "丽江东", "instances": [{"label": "#1", "seq": 1, "desc": "2.砂石厂——路程：12公里，25分钟。1. Sand and Gravel Plant — Distance: 12 km, driving time: 25 minutes · 砂石厂，运营中。Sand and gravel plant, in operation. · Problem is there is no 2nd/3rd floor office. · 地点：丽江东East of Lijiang", "images": [{"src": "images/factory/factory_07.jpeg", "filename": "factory_07.jpeg", "size": 39630, "thumb": "thumbs/factory/factory_07.jpg"}, {"src": "images/factory/factory_08.jpeg", "filename": "factory_08.jpeg", "size": 46734, "thumb": "thumbs/factory/factory_08.jpg"}, {"src": "images/factory/factory_09.jpeg", "filename": "factory_09.jpeg", "size": 42939, "thumb": "thumbs/factory/factory_09.jpg"}, {"src": "images/factory/factory_10.jpeg", "filename": "factory_10.jpeg", "size": 45250, "thumb": "thumbs/factory/factory_10.jpg"}, {"src": "images/factory/factory_11.jpeg", "filename": "factory_11.jpeg", "size": 46344, "thumb": "thumbs/factory/factory_11.jpg"}, {"src": "images/factory/factory_12.jpeg", "filename": "factory_12.jpeg", "size": 26293, "thumb": "thumbs/factory/factory_12.jpg"}, {"src": "images/factory/factory_13.jpeg", "filename": "factory_13.jpeg", "size": 42593, "thumb": "thumbs/factory/factory_13.jpg"}, {"src": "images/factory/factory_14.jpeg", "filename": "factory_14.jpeg", "size": 32237, "thumb": "thumbs/factory/factory_14.jpg"}]}, {"label": "#2", "seq": 2, "desc": "4.砂石厂——路程25公里，35分钟。5. Sand and Gravel Plant — Distance: 25 km, 35 minutes · 地点：丽江东。 · Location: East Lijiang", "images": [{"src": "images/factory/factory_23.jpeg", "filename": "factory_23.jpeg", "size": 39604, "thumb": "thumbs/factory/factory_23.jpg"}, {"src": "images/factory/factory_24.jpeg", "filename": "factory_24.jpeg", "size": 42526, "thumb": "thumbs/factory/factory_24.jpg"}, {"src": "images/factory/factory_25.jpeg", "filename": "factory_25.jpeg", "size": 29027, "thumb": "thumbs/factory/factory_25.jpg"}, {"src": "images/factory/factory_26.jpeg", "filename": "factory_26.jpeg", "size": 28461, "thumb": "thumbs/factory/factory_26.jpg"}, {"src": "images/factory/factory_27.jpeg", "filename": "factory_27.jpeg", "size": 32880, "thumb": "thumbs/factory/factory_27.jpg"}, {"src": "images/factory/factory_28.jpeg", "filename": "factory_28.jpeg", "size": 34424, "thumb": "thumbs/factory/factory_28.jpg"}]}], "title_en": "Sand & Gravel Plant (E. Lijiang)"}, {"title": "建材厂（丽江东）", "base": "建材厂", "location": "丽江东", "instances": [{"label": "", "seq": null, "desc": "3.建材厂——路程:15公里，20分钟.4. Building Materials Factory — Distance: 15 km, 20 minutes · 地点：丽江东。 · Location: East Lijiang", "images": [{"src": "images/factory/factory_15.jpeg", "filename": "factory_15.jpeg", "size": 41482, "thumb": "thumbs/factory/factory_15.jpg"}, {"src": "images/factory/factory_16.jpeg", "filename": "factory_16.jpeg", "size": 35227, "thumb": "thumbs/factory/factory_16.jpg"}, {"src": "images/factory/factory_17.jpeg", "filename": "factory_17.jpeg", "size": 38794, "thumb": "thumbs/factory/factory_17.jpg"}, {"src": "images/factory/factory_18.jpeg", "filename": "factory_18.jpeg", "size": 39355, "thumb": "thumbs/factory/factory_18.jpg"}, {"src": "images/factory/factory_19.jpeg", "filename": "factory_19.jpeg", "size": 46528, "thumb": "thumbs/factory/factory_19.jpg"}, {"src": "images/factory/factory_20.jpeg", "filename": "factory_20.jpeg", "size": 47372, "thumb": "thumbs/factory/factory_20.jpg"}, {"src": "images/factory/factory_21.jpeg", "filename": "factory_21.jpeg", "size": 52455, "thumb": "thumbs/factory/factory_21.jpg"}, {"src": "images/factory/factory_22.jpeg", "filename": "factory_22.jpeg", "size": 51952, "thumb": "thumbs/factory/factory_22.jpg"}]}], "title_en": "Building Materials Factory (E. Lijiang)"}, {"title": "水泥厂（丽江南）", "base": "水泥厂", "location": "丽江南", "instances": [{"label": "", "seq": null, "desc": "5.水泥厂（华新水泥厂.剑川）——路程55公里，55分钟。2. Cement Factory (Huaxin, Heqing) — Distance 55 km, 55 minutes. · 厂区比较大。生产经营中。The factory area is relatively large. It is in production and operation. · 地点：丽江南South of Lijiang", "images": [{"src": "images/factory/factory_29.jpeg", "filename": "factory_29.jpeg", "size": 28137, "thumb": "thumbs/factory/factory_29.jpg"}, {"src": "images/factory/factory_30.jpeg", "filename": "factory_30.jpeg", "size": 44036, "thumb": "thumbs/factory/factory_30.jpg"}, {"src": "images/factory/factory_31.jpeg", "filename": "factory_31.jpeg", "size": 40775, "thumb": "thumbs/factory/factory_31.jpg"}, {"src": "images/factory/factory_32.jpeg", "filename": "factory_32.jpeg", "size": 31330, "thumb": "thumbs/factory/factory_32.jpg"}, {"src": "images/factory/factory_33.jpeg", "filename": "factory_33.jpeg", "size": 41390, "thumb": "thumbs/factory/factory_33.jpg"}, {"src": "images/factory/factory_34.jpeg", "filename": "factory_34.jpeg", "size": 51020, "thumb": "thumbs/factory/factory_34.jpg"}, {"src": "images/factory/factory_35.jpeg", "filename": "factory_35.jpeg", "size": 35576, "thumb": "thumbs/factory/factory_35.jpg"}, {"src": "images/factory/factory_36.jpeg", "filename": "factory_36.jpeg", "size": 41065, "thumb": "thumbs/factory/factory_36.jpg"}, {"src": "images/factory/factory_37.jpeg", "filename": "factory_37.jpeg", "size": 55180, "thumb": "thumbs/factory/factory_37.jpg"}, {"src": "images/factory/factory_38.jpeg", "filename": "factory_38.jpeg", "size": 41908, "thumb": "thumbs/factory/factory_38.jpg"}, {"src": "images/factory/factory_39.jpeg", "filename": "factory_39.jpeg", "size": 34152, "thumb": "thumbs/factory/factory_39.jpg"}, {"src": "images/factory/factory_40.jpeg", "filename": "factory_40.jpeg", "size": 31486, "thumb": "thumbs/factory/factory_40.jpg"}, {"src": "images/factory/factory_41.jpeg", "filename": "factory_41.jpeg", "size": 58082, "thumb": "thumbs/factory/factory_41.jpg"}, {"src": "images/factory/factory_42.jpeg", "filename": "factory_42.jpeg", "size": 50740, "thumb": "thumbs/factory/factory_42.jpg"}, {"src": "images/factory/factory_43.jpeg", "filename": "factory_43.jpeg", "size": 33514, "thumb": "thumbs/factory/factory_43.jpg"}, {"src": "images/factory/factory_44.jpeg", "filename": "factory_44.jpeg", "size": 36450, "thumb": "thumbs/factory/factory_44.jpg"}, {"src": "images/factory/factory_45.jpeg", "filename": "factory_45.jpeg", "size": 33328, "thumb": "thumbs/factory/factory_45.jpg"}, {"src": "images/factory/factory_46.jpeg", "filename": "factory_46.jpeg", "size": 36178, "thumb": "thumbs/factory/factory_46.jpg"}, {"src": "images/factory/factory_47.jpeg", "filename": "factory_47.jpeg", "size": 38921, "thumb": "thumbs/factory/factory_47.jpg"}, {"src": "images/factory/factory_48.jpeg", "filename": "factory_48.jpeg", "size": 43517, "thumb": "thumbs/factory/factory_48.jpg"}]}], "title_en": "Cement Plant - Huaxin, Jianchuan"}], "instance_count": 5}, "parking_lot": {"key": "parking_lot", "name_zh": "停车场", "name_en": "Parking Lot", "source": "停车场Parking lot.docx", "image_count": 11, "locations": [{"title": "停车场（船盛汽配城）", "base": "停车场", "location": "船盛汽配城", "instances": [{"label": "", "seq": null, "desc": "1.停车场（船盛汽配城）——路程：5公里，12分钟。1. Parking lot（Chuan Sheng Auto Parts City）——Distance: 5 km, driving time: 12 minutes · 停车场车辆多，杂乱、无序。 · The parking lot has many vehicles, which are messy and disorganized. · 地点：丽江西West of Lijiang", "images": [{"src": "images/parking_lot/parking_lot_01.jpeg", "filename": "parking_lot_01.jpeg", "size": 32765, "thumb": "thumbs/parking_lot/parking_lot_01.jpg"}, {"src": "images/parking_lot/parking_lot_02.jpeg", "filename": "parking_lot_02.jpeg", "size": 251554, "thumb": "thumbs/parking_lot/parking_lot_02.jpg"}, {"src": "images/parking_lot/parking_lot_03.jpeg", "filename": "parking_lot_03.jpeg", "size": 243984, "thumb": "thumbs/parking_lot/parking_lot_03.jpg"}, {"src": "images/parking_lot/parking_lot_04.jpeg", "filename": "parking_lot_04.jpeg", "size": 39008, "thumb": "thumbs/parking_lot/parking_lot_04.jpg"}, {"src": "images/parking_lot/parking_lot_05.jpeg", "filename": "parking_lot_05.jpeg", "size": 43148, "thumb": "thumbs/parking_lot/parking_lot_05.jpg"}, {"src": "images/parking_lot/parking_lot_06.jpeg", "filename": "parking_lot_06.jpeg", "size": 263660, "thumb": "thumbs/parking_lot/parking_lot_06.jpg"}]}], "title_en": "Chuan Sheng Auto Parts City"}, {"title": "停车场（宏文巷）", "base": "停车场", "location": "宏文巷", "instances": [{"label": "", "seq": null, "desc": "2.停车场（宏文巷）——路程：路程：5公里，12分钟2. Parking Lot（Hongwen Lane）——Distance: 5 km, driving time: 12 minutes · 停车场挺大，但是周围建筑太多。The parking lot is quite large, but there are too many buildings around. · 地点：丽江北Northern Lijiang", "images": [{"src": "images/parking_lot/parking_lot_07.jpeg", "filename": "parking_lot_07.jpeg", "size": 282568, "thumb": "thumbs/parking_lot/parking_lot_07.jpg"}, {"src": "images/parking_lot/parking_lot_08.jpeg", "filename": "parking_lot_08.jpeg", "size": 33630, "thumb": "thumbs/parking_lot/parking_lot_08.jpg"}, {"src": "images/parking_lot/parking_lot_09.png", "filename": "parking_lot_09.png", "size": 318510, "thumb": "thumbs/parking_lot/parking_lot_09.jpg"}, {"src": "images/parking_lot/parking_lot_10.png", "filename": "parking_lot_10.png", "size": 302638, "thumb": "thumbs/parking_lot/parking_lot_10.jpg"}, {"src": "images/parking_lot/parking_lot_11.png", "filename": "parking_lot_11.png", "size": 305046, "thumb": "thumbs/parking_lot/parking_lot_11.jpg"}]}], "title_en": "Hongwen Lane"}], "instance_count": 2}, "wasteland": {"key": "wasteland", "name_zh": "荒地", "name_en": "Wasteland", "source": "荒地Wasteland.docx", "image_count": 15, "locations": [{"title": "荒地（丽江）", "base": "荒地", "location": "丽江", "instances": [{"label": "", "seq": null, "desc": "1.荒地——路程13公里，30分钟 Wasteland —13kilometers, 30 minutes · 地点：丽江：Northern Lijiang", "images": [{"src": "images/wasteland/wasteland_01.jpeg", "filename": "wasteland_01.jpeg", "size": 81588, "thumb": "thumbs/wasteland/wasteland_01.jpg"}, {"src": "images/wasteland/wasteland_02.jpeg", "filename": "wasteland_02.jpeg", "size": 107434, "thumb": "thumbs/wasteland/wasteland_02.jpg"}, {"src": "images/wasteland/wasteland_03.jpeg", "filename": "wasteland_03.jpeg", "size": 96013, "thumb": "thumbs/wasteland/wasteland_03.jpg"}, {"src": "images/wasteland/wasteland_04.jpeg", "filename": "wasteland_04.jpeg", "size": 93531, "thumb": "thumbs/wasteland/wasteland_04.jpg"}, {"src": "images/wasteland/wasteland_05.jpeg", "filename": "wasteland_05.jpeg", "size": 102293, "thumb": "thumbs/wasteland/wasteland_05.jpg"}]}], "title_en": "Wasteland (N. Lijiang)"}, {"title": "荒地（废弃驾校）", "base": "荒地", "location": "废弃驾校", "instances": [{"label": "", "seq": null, "desc": "2.荒地（废弃驾校）——路程23公里，35分钟。3. Wasteland (abandoned driving school) — distance 23 km, 35 minutes. · 废弃的驾校，但是有看到学员在练车。这里还有一个废弃的隧道。Abandoned driving school, yet some learners can still be seen practicing driving. There is also an abandoned tunnel here.", "images": [{"src": "images/wasteland/wasteland_06.jpeg", "filename": "wasteland_06.jpeg", "size": 1115033, "thumb": "thumbs/wasteland/wasteland_06.jpg"}, {"src": "images/wasteland/wasteland_07.jpeg", "filename": "wasteland_07.jpeg", "size": 51627, "thumb": "thumbs/wasteland/wasteland_07.jpg"}, {"src": "images/wasteland/wasteland_08.jpeg", "filename": "wasteland_08.jpeg", "size": 52283, "thumb": "thumbs/wasteland/wasteland_08.jpg"}, {"src": "images/wasteland/wasteland_09.jpeg", "filename": "wasteland_09.jpeg", "size": 61670, "thumb": "thumbs/wasteland/wasteland_09.jpg"}, {"src": "images/wasteland/wasteland_10.jpeg", "filename": "wasteland_10.jpeg", "size": 44869, "thumb": "thumbs/wasteland/wasteland_10.jpg"}, {"src": "images/wasteland/wasteland_11.jpeg", "filename": "wasteland_11.jpeg", "size": 44693, "thumb": "thumbs/wasteland/wasteland_11.jpg"}, {"src": "images/wasteland/wasteland_12.jpeg", "filename": "wasteland_12.jpeg", "size": 45420, "thumb": "thumbs/wasteland/wasteland_12.jpg"}, {"src": "images/wasteland/wasteland_13.jpeg", "filename": "wasteland_13.jpeg", "size": 65582, "thumb": "thumbs/wasteland/wasteland_13.jpg"}, {"src": "images/wasteland/wasteland_14.jpeg", "filename": "wasteland_14.jpeg", "size": 60816, "thumb": "thumbs/wasteland/wasteland_14.jpg"}, {"src": "images/wasteland/wasteland_15.jpeg", "filename": "wasteland_15.jpeg", "size": 78004, "thumb": "thumbs/wasteland/wasteland_15.jpg"}]}], "title_en": "Wasteland (Abandoned Driving School)"}], "instance_count": 2}, "yingzi_school": {"key": "yingzi_school", "name_zh": "英子小学", "name_en": "Yingzi Primary School", "source": "英子小学Yingzi Primary School.docx", "image_count": 16, "locations": [{"title": "英子小学（太安乡废弃小学）", "base": "英子小学", "location": "太安乡废弃小学", "instances": [{"label": "", "seq": null, "desc": "英子小学（太安乡废弃小学）——32公里，45分钟。1. Yingzi Primary School (Tai'an Township Abandoned Primary School) — 32 kilometers, 45 minutes. · 上面照片的这间房子不能进入，是关于当地少数民族安葬习俗的一个展览馆。The house in the photo above cannot be entered; it is an exhibition hall about the local ethnic minority's burial customs. · 地点：丽江西南Southwestern Lijiang", "images": [{"src": "images/yingzi_school/yingzi_school_01.jpeg", "filename": "yingzi_school_01.jpeg", "size": 48419, "thumb": "thumbs/yingzi_school/yingzi_school_01.jpg"}, {"src": "images/yingzi_school/yingzi_school_02.jpeg", "filename": "yingzi_school_02.jpeg", "size": 47976, "thumb": "thumbs/yingzi_school/yingzi_school_02.jpg"}, {"src": "images/yingzi_school/yingzi_school_03.jpeg", "filename": "yingzi_school_03.jpeg", "size": 38502, "thumb": "thumbs/yingzi_school/yingzi_school_03.jpg"}, {"src": "images/yingzi_school/yingzi_school_04.jpeg", "filename": "yingzi_school_04.jpeg", "size": 365676, "thumb": "thumbs/yingzi_school/yingzi_school_04.jpg"}, {"src": "images/yingzi_school/yingzi_school_05.jpeg", "filename": "yingzi_school_05.jpeg", "size": 36310, "thumb": "thumbs/yingzi_school/yingzi_school_05.jpg"}, {"src": "images/yingzi_school/yingzi_school_06.jpeg", "filename": "yingzi_school_06.jpeg", "size": 40422, "thumb": "thumbs/yingzi_school/yingzi_school_06.jpg"}, {"src": "images/yingzi_school/yingzi_school_07.jpeg", "filename": "yingzi_school_07.jpeg", "size": 111180, "thumb": "thumbs/yingzi_school/yingzi_school_07.jpg"}, {"src": "images/yingzi_school/yingzi_school_08.jpeg", "filename": "yingzi_school_08.jpeg", "size": 161376, "thumb": "thumbs/yingzi_school/yingzi_school_08.jpg"}, {"src": "images/yingzi_school/yingzi_school_09.jpeg", "filename": "yingzi_school_09.jpeg", "size": 152805, "thumb": "thumbs/yingzi_school/yingzi_school_09.jpg"}, {"src": "images/yingzi_school/yingzi_school_10.png", "filename": "yingzi_school_10.png", "size": 818405, "thumb": "thumbs/yingzi_school/yingzi_school_10.jpg"}]}], "title_en": "Tai'an Township Abandoned School"}, {"title": "小学（村委会）", "base": "小学", "location": "村委会", "instances": [{"label": "", "seq": null, "desc": "2.小学（村委会）——路程22公里，35分钟。2. Elementary School (Village Committee) — Distance 22 kilometers, 35 minutes. · 备选。Alternative · 地点：丽江南South of Lijiang", "images": [{"src": "images/yingzi_school/yingzi_school_11.jpeg", "filename": "yingzi_school_11.jpeg", "size": 247486, "thumb": "thumbs/yingzi_school/yingzi_school_11.jpg"}, {"src": "images/yingzi_school/yingzi_school_12.jpeg", "filename": "yingzi_school_12.jpeg", "size": 280855, "thumb": "thumbs/yingzi_school/yingzi_school_12.jpg"}, {"src": "images/yingzi_school/yingzi_school_13.jpeg", "filename": "yingzi_school_13.jpeg", "size": 247896, "thumb": "thumbs/yingzi_school/yingzi_school_13.jpg"}, {"src": "images/yingzi_school/yingzi_school_14.jpeg", "filename": "yingzi_school_14.jpeg", "size": 315751, "thumb": "thumbs/yingzi_school/yingzi_school_14.jpg"}, {"src": "images/yingzi_school/yingzi_school_15.jpeg", "filename": "yingzi_school_15.jpeg", "size": 316162, "thumb": "thumbs/yingzi_school/yingzi_school_15.jpg"}, {"src": "images/yingzi_school/yingzi_school_16.jpeg", "filename": "yingzi_school_16.jpeg", "size": 299520, "thumb": "thumbs/yingzi_school/yingzi_school_16.jpg"}]}], "title_en": "Village Committee School"}], "instance_count": 2}, "yingzi_house": {"key": "yingzi_house", "name_zh": "英子家", "name_en": "Yingzi's House", "source": "英子家Yingzi's House.docx", "image_count": 49, "locations": [{"title": "英子家（金安镇）", "base": "英子家", "location": "金安镇", "instances": [{"label": "#1", "seq": 1, "desc": "1.英子家——金安镇。路程32公里，55分钟。2. Yingzi's Home — Jin'an Town. Distance 32 kilometers, 55 minutes. · 进村道路比较窄，离目的地300米处有弯道。The village access road is relatively narrow, with a curve located 300 meters away from the destination. · 地点：丽江东East of Lijiang", "images": [{"src": "images/yingzi_house/yingzi_house_01.jpeg", "filename": "yingzi_house_01.jpeg", "size": 74548, "thumb": "thumbs/yingzi_house/yingzi_house_01.jpg"}, {"src": "images/yingzi_house/yingzi_house_02.jpeg", "filename": "yingzi_house_02.jpeg", "size": 1613768, "thumb": "thumbs/yingzi_house/yingzi_house_02.jpg"}, {"src": "images/yingzi_house/yingzi_house_03.jpeg", "filename": "yingzi_house_03.jpeg", "size": 1099001, "thumb": "thumbs/yingzi_house/yingzi_house_03.jpg"}, {"src": "images/yingzi_house/yingzi_house_04.jpeg", "filename": "yingzi_house_04.jpeg", "size": 1461424, "thumb": "thumbs/yingzi_house/yingzi_house_04.jpg"}, {"src": "images/yingzi_house/yingzi_house_05.jpeg", "filename": "yingzi_house_05.jpeg", "size": 41970, "thumb": "thumbs/yingzi_house/yingzi_house_05.jpg"}, {"src": "images/yingzi_house/yingzi_house_06.jpeg", "filename": "yingzi_house_06.jpeg", "size": 55542, "thumb": "thumbs/yingzi_house/yingzi_house_06.jpg"}]}, {"label": "#2", "seq": 2, "desc": "3.英子家——金安镇。路程35公里，70分钟。Yingzi's Home No.3— Jin'an Town. Distance 35 kilometers, 70 minutes. · 有一段10公里左右的乡道较窄，还有两百米左右的水泥路只能通过小车，还需要步行约100米。There is a narrow country road of about 10 kilometers. Additionally, there is around 200 meters of cement road only accessible to small cars, followed by a walking distance of app…", "images": [{"src": "images/yingzi_house/yingzi_house_19.jpeg", "filename": "yingzi_house_19.jpeg", "size": 55741, "thumb": "thumbs/yingzi_house/yingzi_house_19.jpg"}, {"src": "images/yingzi_house/yingzi_house_20.jpeg", "filename": "yingzi_house_20.jpeg", "size": 1682880, "thumb": "thumbs/yingzi_house/yingzi_house_20.jpg"}, {"src": "images/yingzi_house/yingzi_house_21.jpeg", "filename": "yingzi_house_21.jpeg", "size": 1641389, "thumb": "thumbs/yingzi_house/yingzi_house_21.jpg"}, {"src": "images/yingzi_house/yingzi_house_22.jpeg", "filename": "yingzi_house_22.jpeg", "size": 1487784, "thumb": "thumbs/yingzi_house/yingzi_house_22.jpg"}, {"src": "images/yingzi_house/yingzi_house_23.jpeg", "filename": "yingzi_house_23.jpeg", "size": 1343602, "thumb": "thumbs/yingzi_house/yingzi_house_23.jpg"}, {"src": "images/yingzi_house/yingzi_house_24.jpeg", "filename": "yingzi_house_24.jpeg", "size": 913602, "thumb": "thumbs/yingzi_house/yingzi_house_24.jpg"}]}], "title_en": "Yingzi's Home, Jin'an Town"}, {"title": "英子家（七河镇）", "base": "英子家", "location": "七河镇", "instances": [{"label": "#1", "seq": 1, "desc": "2.英子家（七河镇）——路程25公里，40分钟 5. Yingzi's Home (Qihe Town) — 25 kilometers, 40 minutes · 房屋所在位置不错，但是能看到一侧有新修的房子。The location of the house is good, but you can see newly built houses on one side.", "images": [{"src": "images/yingzi_house/yingzi_house_07.jpeg", "filename": "yingzi_house_07.jpeg", "size": 66323, "thumb": "thumbs/yingzi_house/yingzi_house_07.jpg"}, {"src": "images/yingzi_house/yingzi_house_08.jpeg", "filename": "yingzi_house_08.jpeg", "size": 63444, "thumb": "thumbs/yingzi_house/yingzi_house_08.jpg"}, {"src": "images/yingzi_house/yingzi_house_09.jpeg", "filename": "yingzi_house_09.jpeg", "size": 55142, "thumb": "thumbs/yingzi_house/yingzi_house_09.jpg"}, {"src": "images/yingzi_house/yingzi_house_10.jpeg", "filename": "yingzi_house_10.jpeg", "size": 38696, "thumb": "thumbs/yingzi_house/yingzi_house_10.jpg"}, {"src": "images/yingzi_house/yingzi_house_11.jpeg", "filename": "yingzi_house_11.jpeg", "size": 62725, "thumb": "thumbs/yingzi_house/yingzi_house_11.jpg"}, {"src": "images/yingzi_house/yingzi_house_12.jpeg", "filename": "yingzi_house_12.jpeg", "size": 66697, "thumb": "thumbs/yingzi_house/yingzi_house_12.jpg"}, {"src": "images/yingzi_house/yingzi_house_13.jpeg", "filename": "yingzi_house_13.jpeg", "size": 44010, "thumb": "thumbs/yingzi_house/yingzi_house_13.jpg"}, {"src": "images/yingzi_house/yingzi_house_14.jpeg", "filename": "yingzi_house_14.jpeg", "size": 59694, "thumb": "thumbs/yingzi_house/yingzi_house_14.jpg"}, {"src": "images/yingzi_house/yingzi_house_15.jpeg", "filename": "yingzi_house_15.jpeg", "size": 59815, "thumb": "thumbs/yingzi_house/yingzi_house_15.jpg"}, {"src": "images/yingzi_house/yingzi_house_16.jpeg", "filename": "yingzi_house_16.jpeg", "size": 47568, "thumb": "thumbs/yingzi_house/yingzi_house_16.jpg"}, {"src": "images/yingzi_house/yingzi_house_17.jpeg", "filename": "yingzi_house_17.jpeg", "size": 52517, "thumb": "thumbs/yingzi_house/yingzi_house_17.jpg"}, {"src": "images/yingzi_house/yingzi_house_18.jpeg", "filename": "yingzi_house_18.jpeg", "size": 48208, "thumb": "thumbs/yingzi_house/yingzi_house_18.jpg"}]}, {"label": "#2", "seq": 2, "desc": "5.英子家（七河镇）——路程24公里，40分钟。6. Yingzi's Home (Qihe Town) — Distance 24 km, 40 minutes. · 院落比较大，房屋多。 · The courtyard is relatively large, with many houses. · 5.6房屋都在七河镇，相距不远。离丽江机场较近，偶尔能听到飞机声音。 · Houses 5, 6 are all in Qihe Town and are not far apart. They are relatively close to Lijiang Airport, and sometimes you can hea…", "images": [{"src": "images/yingzi_house/yingzi_house_31.jpeg", "filename": "yingzi_house_31.jpeg", "size": 74186, "thumb": "thumbs/yingzi_house/yingzi_house_31.jpg"}, {"src": "images/yingzi_house/yingzi_house_32.jpeg", "filename": "yingzi_house_32.jpeg", "size": 40606, "thumb": "thumbs/yingzi_house/yingzi_house_32.jpg"}, {"src": "images/yingzi_house/yingzi_house_33.jpeg", "filename": "yingzi_house_33.jpeg", "size": 29913, "thumb": "thumbs/yingzi_house/yingzi_house_33.jpg"}, {"src": "images/yingzi_house/yingzi_house_34.jpeg", "filename": "yingzi_house_34.jpeg", "size": 32375, "thumb": "thumbs/yingzi_house/yingzi_house_34.jpg"}, {"src": "images/yingzi_house/yingzi_house_35.jpeg", "filename": "yingzi_house_35.jpeg", "size": 50804, "thumb": "thumbs/yingzi_house/yingzi_house_35.jpg"}, {"src": "images/yingzi_house/yingzi_house_36.jpeg", "filename": "yingzi_house_36.jpeg", "size": 32177, "thumb": "thumbs/yingzi_house/yingzi_house_36.jpg"}, {"src": "images/yingzi_house/yingzi_house_37.jpeg", "filename": "yingzi_house_37.jpeg", "size": 42090, "thumb": "thumbs/yingzi_house/yingzi_house_37.jpg"}, {"src": "images/yingzi_house/yingzi_house_38.jpeg", "filename": "yingzi_house_38.jpeg", "size": 48519, "thumb": "thumbs/yingzi_house/yingzi_house_38.jpg"}, {"src": "images/yingzi_house/yingzi_house_39.jpeg", "filename": "yingzi_house_39.jpeg", "size": 59584, "thumb": "thumbs/yingzi_house/yingzi_house_39.jpg"}, {"src": "images/yingzi_house/yingzi_house_40.jpeg", "filename": "yingzi_house_40.jpeg", "size": 53218, "thumb": "thumbs/yingzi_house/yingzi_house_40.jpg"}]}], "title_en": "Yingzi's Home, Qihe Town"}, {"title": "英子家（南溪村）", "base": "英子家", "location": "南溪村", "instances": [{"label": "", "seq": null, "desc": "4.英子家——南溪村。20公里，35分钟。. Yingzi's Home — Nanxi Village. 20 kilometers, 35 minutes. · 地点：丽江西Western Lijiang · 海拔3000米。The altitude is 3000 meters.", "images": [{"src": "images/yingzi_house/yingzi_house_25.jpeg", "filename": "yingzi_house_25.jpeg", "size": 48084, "thumb": "thumbs/yingzi_house/yingzi_house_25.jpg"}, {"src": "images/yingzi_house/yingzi_house_26.jpeg", "filename": "yingzi_house_26.jpeg", "size": 43784, "thumb": "thumbs/yingzi_house/yingzi_house_26.jpg"}, {"src": "images/yingzi_house/yingzi_house_27.jpeg", "filename": "yingzi_house_27.jpeg", "size": 45669, "thumb": "thumbs/yingzi_house/yingzi_house_27.jpg"}, {"src": "images/yingzi_house/yingzi_house_28.jpeg", "filename": "yingzi_house_28.jpeg", "size": 51319, "thumb": "thumbs/yingzi_house/yingzi_house_28.jpg"}, {"src": "images/yingzi_house/yingzi_house_29.jpeg", "filename": "yingzi_house_29.jpeg", "size": 44025, "thumb": "thumbs/yingzi_house/yingzi_house_29.jpg"}, {"src": "images/yingzi_house/yingzi_house_30.jpeg", "filename": "yingzi_house_30.jpeg", "size": 50553, "thumb": "thumbs/yingzi_house/yingzi_house_30.jpg"}]}], "title_en": "Yingzi's Home, Nanxi Village"}, {"title": "英子家（南尧村）", "base": "英子家", "location": "南尧村", "instances": [{"label": "", "seq": null, "desc": "61英子家（南尧村）——路程：18公里，30分钟。Yingzi's House No. 4 (Nanyao Village)——Distance:18 km, driving time: 30 minutes · We saw this one in September. I left it in in case we got desperate. One side with other houses cant film, but could comp the mountains in the back if needed. There were lots of ins and ons to this house. · 南尧村…", "images": [{"src": "images/yingzi_house/yingzi_house_41.jpeg", "filename": "yingzi_house_41.jpeg", "size": 1469389, "thumb": "thumbs/yingzi_house/yingzi_house_41.jpg"}, {"src": "images/yingzi_house/yingzi_house_42.jpeg", "filename": "yingzi_house_42.jpeg", "size": 65329, "thumb": "thumbs/yingzi_house/yingzi_house_42.jpg"}, {"src": "images/yingzi_house/yingzi_house_43.jpeg", "filename": "yingzi_house_43.jpeg", "size": 1482929, "thumb": "thumbs/yingzi_house/yingzi_house_43.jpg"}, {"src": "images/yingzi_house/yingzi_house_44.jpeg", "filename": "yingzi_house_44.jpeg", "size": 1401243, "thumb": "thumbs/yingzi_house/yingzi_house_44.jpg"}, {"src": "images/yingzi_house/yingzi_house_45.jpeg", "filename": "yingzi_house_45.jpeg", "size": 1695890, "thumb": "thumbs/yingzi_house/yingzi_house_45.jpg"}, {"src": "images/yingzi_house/yingzi_house_46.jpeg", "filename": "yingzi_house_46.jpeg", "size": 1667530, "thumb": "thumbs/yingzi_house/yingzi_house_46.jpg"}, {"src": "images/yingzi_house/yingzi_house_47.jpeg", "filename": "yingzi_house_47.jpeg", "size": 1072688, "thumb": "thumbs/yingzi_house/yingzi_house_47.jpg"}, {"src": "images/yingzi_house/yingzi_house_48.jpeg", "filename": "yingzi_house_48.jpeg", "size": 1957797, "thumb": "thumbs/yingzi_house/yingzi_house_48.jpg"}, {"src": "images/yingzi_house/yingzi_house_49.jpeg", "filename": "yingzi_house_49.jpeg", "size": 1589951, "thumb": "thumbs/yingzi_house/yingzi_house_49.jpg"}]}], "title_en": "Yingzi's Home, Nanyao Village"}], "instance_count": 6}, "urban_highway": {"key": "urban_highway", "name_zh": "城市高架", "name_en": "Urban Elevated Highway", "source": "城市高架Urban Elevated Highway.docx", "image_count": 1, "locations": [{"title": "城市高架", "base": "城市高架", "location": "", "instances": [{"label": "", "seq": null, "desc": "1.城市高架（348国道）——路程：10公里，25分钟。1. Urban Elevated Road (National Highway 348) — Distance: 10 km, 25 minutes · 任送英子到上海郊区下车。Ren Xiatian dropped Yingzi off in the suburbs of Shanghai.", "images": [{"src": "images/urban_highway/urban_highway_01.jpeg", "filename": "urban_highway_01.jpeg", "size": 74537, "thumb": "thumbs/urban_highway/urban_highway_01.jpg"}]}], "title_en": "Urban Elevated Road"}], "instance_count": 1}, "warehouse": {"key": "warehouse", "name_zh": "物流园区/货仓/快递站", "name_en": "Logistics / Warehouse", "source": "物流园区_货仓_快递站Express _Station_Logistics ParkWarehouse.docx", "image_count": 38, "locations": [{"title": "京东快递站（金山站）", "base": "京东快递站", "location": "金山站", "instances": [{"label": "", "seq": null, "desc": "1.京东快递站（金山站）。JD Express Station (Jinshan Station) · 京东对面是一个“菜鲜生”配送仓库。下图： · 地点：丽江市区。Lijiang Downtown。", "images": [{"src": "images/warehouse/warehouse_01.jpeg", "filename": "warehouse_01.jpeg", "size": 37147, "thumb": "thumbs/warehouse/warehouse_01.jpg"}, {"src": "images/warehouse/warehouse_02.jpeg", "filename": "warehouse_02.jpeg", "size": 40649, "thumb": "thumbs/warehouse/warehouse_02.jpg"}, {"src": "images/warehouse/warehouse_03.jpeg", "filename": "warehouse_03.jpeg", "size": 46524, "thumb": "thumbs/warehouse/warehouse_03.jpg"}, {"src": "images/warehouse/warehouse_04.jpeg", "filename": "warehouse_04.jpeg", "size": 35114, "thumb": "thumbs/warehouse/warehouse_04.jpg"}, {"src": "images/warehouse/warehouse_05.jpeg", "filename": "warehouse_05.jpeg", "size": 27011, "thumb": "thumbs/warehouse/warehouse_05.jpg"}, {"src": "images/warehouse/warehouse_06.jpeg", "filename": "warehouse_06.jpeg", "size": 74119, "thumb": "thumbs/warehouse/warehouse_06.jpg"}]}], "title_en": "JD Express, Jinshan Station"}, {"title": "京东快递站（厦禾路站）", "base": "京东快递站", "location": "厦禾路站", "instances": [{"label": "", "seq": null, "desc": "", "images": [{"src": "images/warehouse/warehouse_07.jpeg", "filename": "warehouse_07.jpeg", "size": 51430, "thumb": "thumbs/warehouse/warehouse_07.jpg"}, {"src": "images/warehouse/warehouse_08.jpeg", "filename": "warehouse_08.jpeg", "size": 50424, "thumb": "thumbs/warehouse/warehouse_08.jpg"}, {"src": "images/warehouse/warehouse_09.jpeg", "filename": "warehouse_09.jpeg", "size": 52086, "thumb": "thumbs/warehouse/warehouse_09.jpg"}, {"src": "images/warehouse/warehouse_10.jpeg", "filename": "warehouse_10.jpeg", "size": 52172, "thumb": "thumbs/warehouse/warehouse_10.jpg"}]}], "title_en": "JD Express, Xiahe Road Station"}, {"title": "物流园（丽江城东）", "base": "物流园", "location": "丽江城东", "instances": [{"label": "", "seq": null, "desc": "3.物流园Freight Logistics Park · 地点：丽江城东East of Lijiang City", "images": [{"src": "images/warehouse/warehouse_11.jpeg", "filename": "warehouse_11.jpeg", "size": 38735, "thumb": "thumbs/warehouse/warehouse_11.jpg"}, {"src": "images/warehouse/warehouse_12.jpeg", "filename": "warehouse_12.jpeg", "size": 40827, "thumb": "thumbs/warehouse/warehouse_12.jpg"}, {"src": "images/warehouse/warehouse_13.jpeg", "filename": "warehouse_13.jpeg", "size": 40931, "thumb": "thumbs/warehouse/warehouse_13.jpg"}, {"src": "images/warehouse/warehouse_14.jpeg", "filename": "warehouse_14.jpeg", "size": 39052, "thumb": "thumbs/warehouse/warehouse_14.jpg"}, {"src": "images/warehouse/warehouse_15.jpeg", "filename": "warehouse_15.jpeg", "size": 35784, "thumb": "thumbs/warehouse/warehouse_15.jpg"}, {"src": "images/warehouse/warehouse_16.jpeg", "filename": "warehouse_16.jpeg", "size": 34611, "thumb": "thumbs/warehouse/warehouse_16.jpg"}, {"src": "images/warehouse/warehouse_17.jpeg", "filename": "warehouse_17.jpeg", "size": 43408, "thumb": "thumbs/warehouse/warehouse_17.jpg"}, {"src": "images/warehouse/warehouse_18.jpeg", "filename": "warehouse_18.jpeg", "size": 45134, "thumb": "thumbs/warehouse/warehouse_18.jpg"}]}], "title_en": "Freight Logistics Park (E. Lijiang)"}, {"title": "货仓（七河镇）", "base": "货仓", "location": "七河镇", "instances": [{"label": "", "seq": null, "desc": "4.货仓（七河镇）——路程25公里，35分钟。3. Warehouse (Qihe Town) — Distance 25 kilometers, 35 minutes. · 仓库在山脚下，进门左手边仓库较大，加工魔芋还未生产。右手仓库较小。The warehouse is at the foot of the mountain. The warehouse on the left as you enter is larger, and the konjac processing has not yet started. The warehouse on the right is smaller. · 地点：丽江南South …", "images": [{"src": "images/warehouse/warehouse_19.jpeg", "filename": "warehouse_19.jpeg", "size": 32007, "thumb": "thumbs/warehouse/warehouse_19.jpg"}, {"src": "images/warehouse/warehouse_20.jpeg", "filename": "warehouse_20.jpeg", "size": 29084, "thumb": "thumbs/warehouse/warehouse_20.jpg"}, {"src": "images/warehouse/warehouse_21.jpeg", "filename": "warehouse_21.jpeg", "size": 33511, "thumb": "thumbs/warehouse/warehouse_21.jpg"}, {"src": "images/warehouse/warehouse_22.jpeg", "filename": "warehouse_22.jpeg", "size": 37699, "thumb": "thumbs/warehouse/warehouse_22.jpg"}, {"src": "images/warehouse/warehouse_23.jpeg", "filename": "warehouse_23.jpeg", "size": 37505, "thumb": "thumbs/warehouse/warehouse_23.jpg"}, {"src": "images/warehouse/warehouse_24.jpeg", "filename": "warehouse_24.jpeg", "size": 38532, "thumb": "thumbs/warehouse/warehouse_24.jpg"}, {"src": "images/warehouse/warehouse_25.jpeg", "filename": "warehouse_25.jpeg", "size": 31245, "thumb": "thumbs/warehouse/warehouse_25.jpg"}, {"src": "images/warehouse/warehouse_26.jpeg", "filename": "warehouse_26.jpeg", "size": 29395, "thumb": "thumbs/warehouse/warehouse_26.jpg"}, {"src": "images/warehouse/warehouse_27.jpeg", "filename": "warehouse_27.jpeg", "size": 41032, "thumb": "thumbs/warehouse/warehouse_27.jpg"}, {"src": "images/warehouse/warehouse_28.jpeg", "filename": "warehouse_28.jpeg", "size": 37549, "thumb": "thumbs/warehouse/warehouse_28.jpg"}, {"src": "images/warehouse/warehouse_29.jpeg", "filename": "warehouse_29.jpeg", "size": 30432, "thumb": "thumbs/warehouse/warehouse_29.jpg"}, {"src": "images/warehouse/warehouse_30.jpeg", "filename": "warehouse_30.jpeg", "size": 35899, "thumb": "thumbs/warehouse/warehouse_30.jpg"}, {"src": "images/warehouse/warehouse_31.jpeg", "filename": "warehouse_31.jpeg", "size": 32703, "thumb": "thumbs/warehouse/warehouse_31.jpg"}, {"src": "images/warehouse/warehouse_32.jpeg", "filename": "warehouse_32.jpeg", "size": 30812, "thumb": "thumbs/warehouse/warehouse_32.jpg"}]}], "title_en": "Warehouse, Qihe Town"}, {"title": "货场（丽江西）", "base": "货场", "location": "丽江西", "instances": [{"label": "", "seq": null, "desc": "5.货场——路程15公里，20分钟。4. Freight yard — 15 kilometers, 20 minutes. · 地点：丽江西West of Lijiang", "images": [{"src": "images/warehouse/warehouse_33.jpeg", "filename": "warehouse_33.jpeg", "size": 42112, "thumb": "thumbs/warehouse/warehouse_33.jpg"}, {"src": "images/warehouse/warehouse_34.jpeg", "filename": "warehouse_34.jpeg", "size": 35551, "thumb": "thumbs/warehouse/warehouse_34.jpg"}, {"src": "images/warehouse/warehouse_35.jpeg", "filename": "warehouse_35.jpeg", "size": 45253, "thumb": "thumbs/warehouse/warehouse_35.jpg"}, {"src": "images/warehouse/warehouse_36.jpeg", "filename": "warehouse_36.jpeg", "size": 30049, "thumb": "thumbs/warehouse/warehouse_36.jpg"}, {"src": "images/warehouse/warehouse_37.jpeg", "filename": "warehouse_37.jpeg", "size": 34785, "thumb": "thumbs/warehouse/warehouse_37.jpg"}, {"src": "images/warehouse/warehouse_38.jpeg", "filename": "warehouse_38.jpeg", "size": 33182, "thumb": "thumbs/warehouse/warehouse_38.jpg"}]}], "title_en": "Freight Yard (W. Lijiang)"}], "instance_count": 5}, "ren_house": {"key": "ren_house", "name_zh": "任家", "name_en": "Ren's House", "source": "任家Ren's House.docx", "image_count": 20, "locations": [{"title": "任家村庄（三川镇）", "base": "任家村庄", "location": "三川镇", "instances": [{"label": "", "seq": null, "desc": "1.任家村庄——三川镇。路程70公里，1小时15分钟。1. Renjia Village – Sanchuan Town. Distance 70 kilometers, 1 hour 15 minutes. · In summer will look more like this – can crop out the Mountains. · Not this house for Ren – ugly and too much like Baoliang · 、 · 距离较远。三川镇面积较大，视野开阔。村中有荷花区域，有稻田区域和其他农作物。7月份荷花会开，绿色稻田。荷花节会有游客到此游玩。 · The distance i…", "images": [{"src": "images/ren_house/ren_house_01.jpeg", "filename": "ren_house_01.jpeg", "size": 36645, "thumb": "thumbs/ren_house/ren_house_01.jpg"}, {"src": "images/ren_house/ren_house_02.jpeg", "filename": "ren_house_02.jpeg", "size": 40718, "thumb": "thumbs/ren_house/ren_house_02.jpg"}, {"src": "images/ren_house/ren_house_03.jpeg", "filename": "ren_house_03.jpeg", "size": 27197, "thumb": "thumbs/ren_house/ren_house_03.jpg"}, {"src": "images/ren_house/ren_house_04.jpeg", "filename": "ren_house_04.jpeg", "size": 26423, "thumb": "thumbs/ren_house/ren_house_04.jpg"}, {"src": "images/ren_house/ren_house_05.jpeg", "filename": "ren_house_05.jpeg", "size": 59470, "thumb": "thumbs/ren_house/ren_house_05.jpg"}, {"src": "images/ren_house/ren_house_06.jpeg", "filename": "ren_house_06.jpeg", "size": 59824, "thumb": "thumbs/ren_house/ren_house_06.jpg"}, {"src": "images/ren_house/ren_house_07.jpeg", "filename": "ren_house_07.jpeg", "size": 25729, "thumb": "thumbs/ren_house/ren_house_07.jpg"}, {"src": "images/ren_house/ren_house_08.jpeg", "filename": "ren_house_08.jpeg", "size": 52408, "thumb": "thumbs/ren_house/ren_house_08.jpg"}, {"src": "images/ren_house/ren_house_09.jpeg", "filename": "ren_house_09.jpeg", "size": 62470, "thumb": "thumbs/ren_house/ren_house_09.jpg"}, {"src": "images/ren_house/ren_house_10.jpeg", "filename": "ren_house_10.jpeg", "size": 63351, "thumb": "thumbs/ren_house/ren_house_10.jpg"}, {"src": "images/ren_house/ren_house_11.jpeg", "filename": "ren_house_11.jpeg", "size": 59440, "thumb": "thumbs/ren_house/ren_house_11.jpg"}, {"src": "images/ren_house/ren_house_12.jpeg", "filename": "ren_house_12.jpeg", "size": 48534, "thumb": "thumbs/ren_house/ren_house_12.jpg"}, {"src": "images/ren_house/ren_house_13.jpeg", "filename": "ren_house_13.jpeg", "size": 47605, "thumb": "thumbs/ren_house/ren_house_13.jpg"}]}], "title_en": "Renjia Village, Sanchuan Town"}, {"title": "任家", "base": "任家", "location": "", "instances": [{"label": "", "seq": null, "desc": "", "images": [{"src": "images/ren_house/ren_house_14.jpeg", "filename": "ren_house_14.jpeg", "size": 43218, "thumb": "thumbs/ren_house/ren_house_14.jpg"}, {"src": "images/ren_house/ren_house_15.jpeg", "filename": "ren_house_15.jpeg", "size": 48983, "thumb": "thumbs/ren_house/ren_house_15.jpg"}, {"src": "images/ren_house/ren_house_16.jpeg", "filename": "ren_house_16.jpeg", "size": 45490, "thumb": "thumbs/ren_house/ren_house_16.jpg"}, {"src": "images/ren_house/ren_house_17.jpeg", "filename": "ren_house_17.jpeg", "size": 37488, "thumb": "thumbs/ren_house/ren_house_17.jpg"}, {"src": "images/ren_house/ren_house_18.png", "filename": "ren_house_18.png", "size": 376902, "thumb": "thumbs/ren_house/ren_house_18.jpg"}, {"src": "images/ren_house/ren_house_19.png", "filename": "ren_house_19.png", "size": 353561, "thumb": "thumbs/ren_house/ren_house_19.jpg"}]}], "title_en": "Ren Family"}, {"title": "三川稻田", "base": "三川稻田", "location": "", "instances": [{"label": "", "seq": null, "desc": "3.三川稻田5. Sanchuan Rice Fields · 这条稻田中的水泥路比较窄，7米多的货车从两头入口都不太容易进来。 · The cement road in this rice field is quite narrow, and a truck over 7 meters long has difficulty entering from either end.", "images": [{"src": "images/ren_house/ren_house_20.jpeg", "filename": "ren_house_20.jpeg", "size": 140451, "thumb": "thumbs/ren_house/ren_house_20.jpg"}]}], "title_en": "Sanchuan Rice Fields"}], "instance_count": 3}, "arcade": {"key": "arcade", "name_zh": "游戏厅", "name_en": "Arcade", "source": "Arcade.docx", "image_count": 20, "locations": [{"title": "游戏厅（克罗米星）", "base": "游戏厅", "location": "克罗米星", "instances": [{"label": "", "seq": null, "desc": "1.游戏厅（克罗米星）——市区1. Arcade (Chromistar) — Downtown", "images": [{"src": "images/arcade/arcade_01.jpeg", "filename": "arcade_01.jpeg", "size": 45962, "thumb": "thumbs/arcade/arcade_01.jpg"}, {"src": "images/arcade/arcade_02.jpeg", "filename": "arcade_02.jpeg", "size": 50002, "thumb": "thumbs/arcade/arcade_02.jpg"}, {"src": "images/arcade/arcade_03.jpeg", "filename": "arcade_03.jpeg", "size": 1102066, "thumb": "thumbs/arcade/arcade_03.jpg"}, {"src": "images/arcade/arcade_04.jpeg", "filename": "arcade_04.jpeg", "size": 50841, "thumb": "thumbs/arcade/arcade_04.jpg"}, {"src": "images/arcade/arcade_05.jpeg", "filename": "arcade_05.jpeg", "size": 51137, "thumb": "thumbs/arcade/arcade_05.jpg"}, {"src": "images/arcade/arcade_06.jpeg", "filename": "arcade_06.jpeg", "size": 43429, "thumb": "thumbs/arcade/arcade_06.jpg"}, {"src": "images/arcade/arcade_07.jpeg", "filename": "arcade_07.jpeg", "size": 30348, "thumb": "thumbs/arcade/arcade_07.jpg"}, {"src": "images/arcade/arcade_08.jpeg", "filename": "arcade_08.jpeg", "size": 47119, "thumb": "thumbs/arcade/arcade_08.jpg"}]}], "title_en": "Chromistar Arcade (Downtown)"}, {"title": "游戏厅（超级玩家）", "base": "游戏厅", "location": "超级玩家", "instances": [{"label": "", "seq": null, "desc": "2.游戏厅（超级玩家）——市区2. Arcade (Super Player) — Urban Area", "images": [{"src": "images/arcade/arcade_09.jpeg", "filename": "arcade_09.jpeg", "size": 48601, "thumb": "thumbs/arcade/arcade_09.jpg"}, {"src": "images/arcade/arcade_10.jpeg", "filename": "arcade_10.jpeg", "size": 40509, "thumb": "thumbs/arcade/arcade_10.jpg"}, {"src": "images/arcade/arcade_11.jpeg", "filename": "arcade_11.jpeg", "size": 858140, "thumb": "thumbs/arcade/arcade_11.jpg"}, {"src": "images/arcade/arcade_12.jpeg", "filename": "arcade_12.jpeg", "size": 38010, "thumb": "thumbs/arcade/arcade_12.jpg"}, {"src": "images/arcade/arcade_13.jpeg", "filename": "arcade_13.jpeg", "size": 47895, "thumb": "thumbs/arcade/arcade_13.jpg"}, {"src": "images/arcade/arcade_14.jpeg", "filename": "arcade_14.jpeg", "size": 39289, "thumb": "thumbs/arcade/arcade_14.jpg"}, {"src": "images/arcade/arcade_15.jpeg", "filename": "arcade_15.jpeg", "size": 48667, "thumb": "thumbs/arcade/arcade_15.jpg"}, {"src": "images/arcade/arcade_16.jpeg", "filename": "arcade_16.jpeg", "size": 43347, "thumb": "thumbs/arcade/arcade_16.jpg"}, {"src": "images/arcade/arcade_17.jpeg", "filename": "arcade_17.jpeg", "size": 45094, "thumb": "thumbs/arcade/arcade_17.jpg"}, {"src": "images/arcade/arcade_18.jpeg", "filename": "arcade_18.jpeg", "size": 1313700, "thumb": "thumbs/arcade/arcade_18.jpg"}, {"src": "images/arcade/arcade_19.jpeg", "filename": "arcade_19.jpeg", "size": 1089693, "thumb": "thumbs/arcade/arcade_19.jpg"}, {"src": "images/arcade/arcade_20.jpeg", "filename": "arcade_20.jpeg", "size": 47974, "thumb": "thumbs/arcade/arcade_20.jpg"}]}], "title_en": "Super Player Arcade (Downtown)"}], "instance_count": 2}, "bookstore": {"key": "bookstore", "name_zh": "书店", "name_en": "Bookstore", "source": "书店Bookstore.docx", "image_count": 24, "locations": [{"title": "书店（新华书店）", "base": "书店", "location": "新华书店", "instances": [{"label": "", "seq": null, "desc": "1.书店（新华书店）——路程：市区1. Bookstore (Xinhua Bookstore) — Distance, city center · 书店在闹市区，交通有点拥挤。书店旁大门进去后面有个小型停车场。The bookstore is in a busy commercial area, and the traffic is a bit congested. Next to the bookstore, after entering the main gate, there is a small parking lot in the back.", "images": [{"src": "images/bookstore/bookstore_01.jpeg", "filename": "bookstore_01.jpeg", "size": 716604, "thumb": "thumbs/bookstore/bookstore_01.jpg"}, {"src": "images/bookstore/bookstore_02.jpeg", "filename": "bookstore_02.jpeg", "size": 44842, "thumb": "thumbs/bookstore/bookstore_02.jpg"}, {"src": "images/bookstore/bookstore_03.jpeg", "filename": "bookstore_03.jpeg", "size": 36370, "thumb": "thumbs/bookstore/bookstore_03.jpg"}, {"src": "images/bookstore/bookstore_04.jpeg", "filename": "bookstore_04.jpeg", "size": 1005545, "thumb": "thumbs/bookstore/bookstore_04.jpg"}, {"src": "images/bookstore/bookstore_05.jpeg", "filename": "bookstore_05.jpeg", "size": 294813, "thumb": "thumbs/bookstore/bookstore_05.jpg"}, {"src": "images/bookstore/bookstore_06.jpeg", "filename": "bookstore_06.jpeg", "size": 29336, "thumb": "thumbs/bookstore/bookstore_06.jpg"}, {"src": "images/bookstore/bookstore_07.jpeg", "filename": "bookstore_07.jpeg", "size": 33217, "thumb": "thumbs/bookstore/bookstore_07.jpg"}, {"src": "images/bookstore/bookstore_08.jpeg", "filename": "bookstore_08.jpeg", "size": 42056, "thumb": "thumbs/bookstore/bookstore_08.jpg"}, {"src": "images/bookstore/bookstore_09.jpeg", "filename": "bookstore_09.jpeg", "size": 43079, "thumb": "thumbs/bookstore/bookstore_09.jpg"}, {"src": "images/bookstore/bookstore_10.jpeg", "filename": "bookstore_10.jpeg", "size": 37603, "thumb": "thumbs/bookstore/bookstore_10.jpg"}, {"src": "images/bookstore/bookstore_11.jpeg", "filename": "bookstore_11.jpeg", "size": 38932, "thumb": "thumbs/bookstore/bookstore_11.jpg"}, {"src": "images/bookstore/bookstore_12.jpeg", "filename": "bookstore_12.jpeg", "size": 39080, "thumb": "thumbs/bookstore/bookstore_12.jpg"}, {"src": "images/bookstore/bookstore_13.jpeg", "filename": "bookstore_13.jpeg", "size": 258156, "thumb": "thumbs/bookstore/bookstore_13.jpg"}, {"src": "images/bookstore/bookstore_14.jpeg", "filename": "bookstore_14.jpeg", "size": 41493, "thumb": "thumbs/bookstore/bookstore_14.jpg"}]}], "title_en": "Xinhua Bookstore (Downtown)"}, {"title": "书店（书礼书店）", "base": "书店", "location": "书礼书店", "instances": [{"label": "", "seq": null, "desc": "2.书店（书礼书店），路程：市区。2. Bookstore (ShuLi Bookstore), Distance: city center · 书店在闹市区，交通较拥挤。门前是步行街，书店后面是马路。书店转让中。The bookstore is in a busy commercial area with heavy traffic. There is a pedestrian street in front of it and a road behind it. The bookstore is for transfer.", "images": [{"src": "images/bookstore/bookstore_15.jpeg", "filename": "bookstore_15.jpeg", "size": 56599, "thumb": "thumbs/bookstore/bookstore_15.jpg"}, {"src": "images/bookstore/bookstore_16.jpeg", "filename": "bookstore_16.jpeg", "size": 49041, "thumb": "thumbs/bookstore/bookstore_16.jpg"}, {"src": "images/bookstore/bookstore_17.jpeg", "filename": "bookstore_17.jpeg", "size": 58111, "thumb": "thumbs/bookstore/bookstore_17.jpg"}, {"src": "images/bookstore/bookstore_18.jpeg", "filename": "bookstore_18.jpeg", "size": 65205, "thumb": "thumbs/bookstore/bookstore_18.jpg"}, {"src": "images/bookstore/bookstore_19.jpeg", "filename": "bookstore_19.jpeg", "size": 51139, "thumb": "thumbs/bookstore/bookstore_19.jpg"}, {"src": "images/bookstore/bookstore_20.jpeg", "filename": "bookstore_20.jpeg", "size": 60481, "thumb": "thumbs/bookstore/bookstore_20.jpg"}, {"src": "images/bookstore/bookstore_21.jpeg", "filename": "bookstore_21.jpeg", "size": 1023991, "thumb": "thumbs/bookstore/bookstore_21.jpg"}, {"src": "images/bookstore/bookstore_22.jpeg", "filename": "bookstore_22.jpeg", "size": 56825, "thumb": "thumbs/bookstore/bookstore_22.jpg"}, {"src": "images/bookstore/bookstore_23.jpeg", "filename": "bookstore_23.jpeg", "size": 43175, "thumb": "thumbs/bookstore/bookstore_23.jpg"}, {"src": "images/bookstore/bookstore_24.jpeg", "filename": "bookstore_24.jpeg", "size": 3368603, "thumb": "thumbs/bookstore/bookstore_24.jpg"}]}], "title_en": "ShuLi Bookstore (Downtown)"}], "instance_count": 2}, "luna_park": {"key": "luna_park", "name_zh": "游乐场（荒野之国）", "name_en": "Luna Park", "source": "游乐场Luna Park（荒野之国）.docx", "image_count": 14, "locations": [{"title": "游乐场（荒野之国）", "base": "游乐场", "location": "荒野之国", "instances": [{"label": "", "seq": null, "desc": "游乐场（荒野之国）——路程：5公里，15分钟。地点：丽江北。Luna Park Scout Recap · 2 Big sets including slides, bubble pond, carousel, and driving vehicles.", "images": [{"src": "images/luna_park/luna_park_01.jpeg", "filename": "luna_park_01.jpeg", "size": 222645, "thumb": "thumbs/luna_park/luna_park_01.jpg"}, {"src": "images/luna_park/luna_park_02.jpeg", "filename": "luna_park_02.jpeg", "size": 166975, "thumb": "thumbs/luna_park/luna_park_02.jpg"}, {"src": "images/luna_park/luna_park_03.jpeg", "filename": "luna_park_03.jpeg", "size": 198133, "thumb": "thumbs/luna_park/luna_park_03.jpg"}, {"src": "images/luna_park/luna_park_04.jpeg", "filename": "luna_park_04.jpeg", "size": 157406, "thumb": "thumbs/luna_park/luna_park_04.jpg"}, {"src": "images/luna_park/luna_park_05.jpeg", "filename": "luna_park_05.jpeg", "size": 152903, "thumb": "thumbs/luna_park/luna_park_05.jpg"}, {"src": "images/luna_park/luna_park_06.jpeg", "filename": "luna_park_06.jpeg", "size": 127140, "thumb": "thumbs/luna_park/luna_park_06.jpg"}, {"src": "images/luna_park/luna_park_07.jpeg", "filename": "luna_park_07.jpeg", "size": 156360, "thumb": "thumbs/luna_park/luna_park_07.jpg"}, {"src": "images/luna_park/luna_park_08.jpeg", "filename": "luna_park_08.jpeg", "size": 103444, "thumb": "thumbs/luna_park/luna_park_08.jpg"}, {"src": "images/luna_park/luna_park_09.jpeg", "filename": "luna_park_09.jpeg", "size": 125648, "thumb": "thumbs/luna_park/luna_park_09.jpg"}, {"src": "images/luna_park/luna_park_10.jpeg", "filename": "luna_park_10.jpeg", "size": 106999, "thumb": "thumbs/luna_park/luna_park_10.jpg"}, {"src": "images/luna_park/luna_park_11.jpeg", "filename": "luna_park_11.jpeg", "size": 123947, "thumb": "thumbs/luna_park/luna_park_11.jpg"}, {"src": "images/luna_park/luna_park_12.jpeg", "filename": "luna_park_12.jpeg", "size": 137452, "thumb": "thumbs/luna_park/luna_park_12.jpg"}, {"src": "images/luna_park/luna_park_13.jpeg", "filename": "luna_park_13.jpeg", "size": 342406, "thumb": "thumbs/luna_park/luna_park_13.jpg"}, {"src": "images/luna_park/luna_park_14.jpeg", "filename": "luna_park_14.jpeg", "size": 67286, "thumb": "thumbs/luna_park/luna_park_14.jpg"}]}], "title_en": "Luna Park · Wild Kingdom (N. Lijiang)"}], "instance_count": 1}, "highway_service": {"key":"highway_service","name_zh":"高速公路服务区","name_en":"Highway Service Area","source":"高速公路服务区Highway Service Area.docx","image_count":84,"locations":[{"title":"拉市海服务区","base":"拉市海服务区","location":"","title_en":"Lashihai Service Area (W. Lijiang)","instances":[{"label":"#1","seq":1,"desc":"1.拉市海服务区（大理方向）——路程25公里，32分钟。Lashihai Service Area (towards Dali) — Distance: 25 km, driving time: 32 minutes · 地点：丽江西West of Lijiang","images":[{"src":"images/highway_service/highway_service_01.jpeg","filename":"highway_service_01.jpeg","size":896496,"thumb":"thumbs/highway_service/highway_service_01.jpg"},{"src":"images/highway_service/highway_service_02.jpeg","filename":"highway_service_02.jpeg","size":37900,"thumb":"thumbs/highway_service/highway_service_02.jpg"},{"src":"images/highway_service/highway_service_03.jpeg","filename":"highway_service_03.jpeg","size":754635,"thumb":"thumbs/highway_service/highway_service_03.jpg"},{"src":"images/highway_service/highway_service_04.jpeg","filename":"highway_service_04.jpeg","size":32551,"thumb":"thumbs/highway_service/highway_service_04.jpg"}]},{"label":"#2","seq":2,"desc":"4.拉市海服务区（丽江方向）——路程25公里，30分钟。Lashihai Service Area (Towards Lijiang) — Distance: 25 km, driving time: 30 minutes · 地点：丽江西West of Lijiang","images":[{"src":"images/highway_service/highway_service_23.jpeg","filename":"highway_service_23.jpeg","size":55488,"thumb":"thumbs/highway_service/highway_service_23.jpg"},{"src":"images/highway_service/highway_service_24.jpeg","filename":"highway_service_24.jpeg","size":31110,"thumb":"thumbs/highway_service/highway_service_24.jpg"},{"src":"images/highway_service/highway_service_25.jpeg","filename":"highway_service_25.jpeg","size":26522,"thumb":"thumbs/highway_service/highway_service_25.jpg"},{"src":"images/highway_service/highway_service_26.jpeg","filename":"highway_service_26.jpeg","size":34464,"thumb":"thumbs/highway_service/highway_service_26.jpg"},{"src":"images/highway_service/highway_service_27.jpeg","filename":"highway_service_27.jpeg","size":31090,"thumb":"thumbs/highway_service/highway_service_27.jpg"},{"src":"images/highway_service/highway_service_28.jpeg","filename":"highway_service_28.jpeg","size":842750,"thumb":"thumbs/highway_service/highway_service_28.jpg"}]}]},{"title":"白汉场服务区","base":"白汉场服务区","location":"","title_en":"Baihanchang Service Area (W. Lijiang)","instances":[{"label":"#1","seq":1,"desc":"2.白汉场服务区（大理方向）——路程40公里，40分钟。Baihanchang Service Area (Towards Dali) — Distance: 40 km, driving time: 40 minutes · 地点：丽江西West of Lijiang","images":[{"src":"images/highway_service/highway_service_05.jpeg","filename":"highway_service_05.jpeg","size":47946,"thumb":"thumbs/highway_service/highway_service_05.jpg"},{"src":"images/highway_service/highway_service_06.jpeg","filename":"highway_service_06.jpeg","size":34822,"thumb":"thumbs/highway_service/highway_service_06.jpg"},{"src":"images/highway_service/highway_service_07.jpeg","filename":"highway_service_07.jpeg","size":36605,"thumb":"thumbs/highway_service/highway_service_07.jpg"},{"src":"images/highway_service/highway_service_08.jpeg","filename":"highway_service_08.jpeg","size":773670,"thumb":"thumbs/highway_service/highway_service_08.jpg"},{"src":"images/highway_service/highway_service_09.jpeg","filename":"highway_service_09.jpeg","size":25196,"thumb":"thumbs/highway_service/highway_service_09.jpg"},{"src":"images/highway_service/highway_service_10.jpeg","filename":"highway_service_10.jpeg","size":31896,"thumb":"thumbs/highway_service/highway_service_10.jpg"},{"src":"images/highway_service/highway_service_11.jpeg","filename":"highway_service_11.jpeg","size":25073,"thumb":"thumbs/highway_service/highway_service_11.jpg"},{"src":"images/highway_service/highway_service_12.jpeg","filename":"highway_service_12.jpeg","size":37346,"thumb":"thumbs/highway_service/highway_service_12.jpg"},{"src":"images/highway_service/highway_service_13.jpeg","filename":"highway_service_13.jpeg","size":984043,"thumb":"thumbs/highway_service/highway_service_13.jpg"},{"src":"images/highway_service/highway_service_14.jpeg","filename":"highway_service_14.jpeg","size":965226,"thumb":"thumbs/highway_service/highway_service_14.jpg"}]},{"label":"#2","seq":2,"desc":"3.白汉场服务区（丽江方向）——路程40公里，40分钟。Baihanchang Service Area (Towards Lijiang) — Distance: 40 km, driving time: 40 minutes · 地点：丽江西West of Lijiang","images":[{"src":"images/highway_service/highway_service_15.jpeg","filename":"highway_service_15.jpeg","size":37796,"thumb":"thumbs/highway_service/highway_service_15.jpg"},{"src":"images/highway_service/highway_service_16.jpeg","filename":"highway_service_16.jpeg","size":1063063,"thumb":"thumbs/highway_service/highway_service_16.jpg"},{"src":"images/highway_service/highway_service_17.jpeg","filename":"highway_service_17.jpeg","size":39212,"thumb":"thumbs/highway_service/highway_service_17.jpg"},{"src":"images/highway_service/highway_service_18.jpeg","filename":"highway_service_18.jpeg","size":916066,"thumb":"thumbs/highway_service/highway_service_18.jpg"},{"src":"images/highway_service/highway_service_19.jpeg","filename":"highway_service_19.jpeg","size":944415,"thumb":"thumbs/highway_service/highway_service_19.jpg"},{"src":"images/highway_service/highway_service_20.jpeg","filename":"highway_service_20.jpeg","size":21332,"thumb":"thumbs/highway_service/highway_service_20.jpg"},{"src":"images/highway_service/highway_service_21.jpeg","filename":"highway_service_21.jpeg","size":36158,"thumb":"thumbs/highway_service/highway_service_21.jpg"},{"src":"images/highway_service/highway_service_22.jpeg","filename":"highway_service_22.jpeg","size":43677,"thumb":"thumbs/highway_service/highway_service_22.jpg"}]}]},{"title":"丽江服务区","base":"丽江服务区","location":"","title_en":"Lijiang Service Area (S. Lijiang)","instances":[{"label":"#1","seq":1,"desc":"5.服务区（丽江服务区丽江方向）——路程30公里，30分钟。Service Area (Lijiang Service Area, Lijiang direction) — Distance 30 km, 30 minutes. #1 choice · 服务区距离丽江市区比较近，车流量不大。就餐区简陋，洗手间一般。附近有铁路，偶尔有飞机飞过。能否作为英子夜逃翻越护栏的场景？夜景还未查看。· 地点：丽江南South of Lijiang","images":[{"src":"images/highway_service/highway_service_29.jpeg","filename":"highway_service_29.jpeg","size":2626299,"thumb":"thumbs/highway_service/highway_service_29.jpg"},{"src":"images/highway_service/highway_service_30.jpeg","filename":"highway_service_30.jpeg","size":2450789,"thumb":"thumbs/highway_service/highway_service_30.jpg"},{"src":"images/highway_service/highway_service_31.jpeg","filename":"highway_service_31.jpeg","size":2329592,"thumb":"thumbs/highway_service/highway_service_31.jpg"},{"src":"images/highway_service/highway_service_32.jpeg","filename":"highway_service_32.jpeg","size":1906388,"thumb":"thumbs/highway_service/highway_service_32.jpg"},{"src":"images/highway_service/highway_service_33.jpeg","filename":"highway_service_33.jpeg","size":1960155,"thumb":"thumbs/highway_service/highway_service_33.jpg"},{"src":"images/highway_service/highway_service_34.jpeg","filename":"highway_service_34.jpeg","size":2606962,"thumb":"thumbs/highway_service/highway_service_34.jpg"},{"src":"images/highway_service/highway_service_35.jpeg","filename":"highway_service_35.jpeg","size":2313811,"thumb":"thumbs/highway_service/highway_service_35.jpg"},{"src":"images/highway_service/highway_service_36.jpeg","filename":"highway_service_36.jpeg","size":2015835,"thumb":"thumbs/highway_service/highway_service_36.jpg"},{"src":"images/highway_service/highway_service_37.jpeg","filename":"highway_service_37.jpeg","size":1862988,"thumb":"thumbs/highway_service/highway_service_37.jpg"},{"src":"images/highway_service/highway_service_38.jpeg","filename":"highway_service_38.jpeg","size":514564,"thumb":"thumbs/highway_service/highway_service_38.jpg"},{"src":"images/highway_service/highway_service_39.jpeg","filename":"highway_service_39.jpeg","size":2728611,"thumb":"thumbs/highway_service/highway_service_39.jpg"},{"src":"images/highway_service/highway_service_40.jpeg","filename":"highway_service_40.jpeg","size":3606005,"thumb":"thumbs/highway_service/highway_service_40.jpg"},{"src":"images/highway_service/highway_service_41.jpeg","filename":"highway_service_41.jpeg","size":2765205,"thumb":"thumbs/highway_service/highway_service_41.jpg"},{"src":"images/highway_service/highway_service_42.png","filename":"highway_service_42.png","size":470117,"thumb":"thumbs/highway_service/highway_service_42.jpg"},{"src":"images/highway_service/highway_service_43.jpeg","filename":"highway_service_43.jpeg","size":39985,"thumb":"thumbs/highway_service/highway_service_43.jpg"},{"src":"images/highway_service/highway_service_44.jpeg","filename":"highway_service_44.jpeg","size":2786932,"thumb":"thumbs/highway_service/highway_service_44.jpg"},{"src":"images/highway_service/highway_service_45.jpeg","filename":"highway_service_45.jpeg","size":2334801,"thumb":"thumbs/highway_service/highway_service_45.jpg"},{"src":"images/highway_service/highway_service_46.jpeg","filename":"highway_service_46.jpeg","size":2285027,"thumb":"thumbs/highway_service/highway_service_46.jpg"},{"src":"images/highway_service/highway_service_47.jpeg","filename":"highway_service_47.jpeg","size":3062339,"thumb":"thumbs/highway_service/highway_service_47.jpg"},{"src":"images/highway_service/highway_service_48.jpeg","filename":"highway_service_48.jpeg","size":41267,"thumb":"thumbs/highway_service/highway_service_48.jpg"}]},{"label":"#2","seq":2,"desc":"6.服务区（丽江服务区华坪方向）——路程30公里，30分钟。Service Area (Lijiang Service Area towards Huaping) — Distance 30 km, 30 minutes. · 和对面的丽江服务区丽江方向基本上一样，但是出入口有区别。It is basically the same as the Lijiang direction side, but the entrance and exit are different. · 地点：丽江南South of Lijiang","images":[{"src":"images/highway_service/highway_service_49.jpeg","filename":"highway_service_49.jpeg","size":2573028,"thumb":"thumbs/highway_service/highway_service_49.jpg"},{"src":"images/highway_service/highway_service_50.jpeg","filename":"highway_service_50.jpeg","size":2270532,"thumb":"thumbs/highway_service/highway_service_50.jpg"},{"src":"images/highway_service/highway_service_51.jpeg","filename":"highway_service_51.jpeg","size":2288973,"thumb":"thumbs/highway_service/highway_service_51.jpg"},{"src":"images/highway_service/highway_service_52.jpeg","filename":"highway_service_52.jpeg","size":2514273,"thumb":"thumbs/highway_service/highway_service_52.jpg"},{"src":"images/highway_service/highway_service_53.jpeg","filename":"highway_service_53.jpeg","size":2001649,"thumb":"thumbs/highway_service/highway_service_53.jpg"},{"src":"images/highway_service/highway_service_54.jpeg","filename":"highway_service_54.jpeg","size":1988645,"thumb":"thumbs/highway_service/highway_service_54.jpg"},{"src":"images/highway_service/highway_service_55.jpeg","filename":"highway_service_55.jpeg","size":1786674,"thumb":"thumbs/highway_service/highway_service_55.jpg"},{"src":"images/highway_service/highway_service_56.jpeg","filename":"highway_service_56.jpeg","size":212221,"thumb":"thumbs/highway_service/highway_service_56.jpg"},{"src":"images/highway_service/highway_service_57.jpeg","filename":"highway_service_57.jpeg","size":243664,"thumb":"thumbs/highway_service/highway_service_57.jpg"},{"src":"images/highway_service/highway_service_58.jpeg","filename":"highway_service_58.jpeg","size":172373,"thumb":"thumbs/highway_service/highway_service_58.jpg"},{"src":"images/highway_service/highway_service_59.jpeg","filename":"highway_service_59.jpeg","size":22849,"thumb":"thumbs/highway_service/highway_service_59.jpg"},{"src":"images/highway_service/highway_service_60.jpeg","filename":"highway_service_60.jpeg","size":28661,"thumb":"thumbs/highway_service/highway_service_60.jpg"},{"src":"images/highway_service/highway_service_61.jpeg","filename":"highway_service_61.jpeg","size":39223,"thumb":"thumbs/highway_service/highway_service_61.jpg"},{"src":"images/highway_service/highway_service_62.jpeg","filename":"highway_service_62.jpeg","size":36422,"thumb":"thumbs/highway_service/highway_service_62.jpg"},{"src":"images/highway_service/highway_service_63.jpeg","filename":"highway_service_63.jpeg","size":35301,"thumb":"thumbs/highway_service/highway_service_63.jpg"},{"src":"images/highway_service/highway_service_64.jpeg","filename":"highway_service_64.jpeg","size":32024,"thumb":"thumbs/highway_service/highway_service_64.jpg"},{"src":"images/highway_service/highway_service_65.jpeg","filename":"highway_service_65.jpeg","size":2595058,"thumb":"thumbs/highway_service/highway_service_65.jpg"},{"src":"images/highway_service/highway_service_66.jpeg","filename":"highway_service_66.jpeg","size":2618089,"thumb":"thumbs/highway_service/highway_service_66.jpg"}]}]},{"title":"龙蟠服务区","base":"龙蟠服务区","location":"西丽高速","title_en":"Longpan Service Area (N. Lijiang)","instances":[{"label":"","seq":null,"desc":"7.服务区（龙蟠服务区，西丽高速西宁方向）——路程：70公里，50分钟。Service Area (Longpan Service Area, Xili Expressway towards Xining) — Distance: 70 km, 50 minutes. · 服务区车流量较大，就餐区和卫生间布局和拉市海、白汉场服务区差不多。而且出服务区绕回来也是很远，大概70公里，45分钟。· 地点：丽江北North of Lijiang","images":[{"src":"images/highway_service/highway_service_67.jpeg","filename":"highway_service_67.jpeg","size":279058,"thumb":"thumbs/highway_service/highway_service_67.jpg"},{"src":"images/highway_service/highway_service_68.jpeg","filename":"highway_service_68.jpeg","size":240899,"thumb":"thumbs/highway_service/highway_service_68.jpg"},{"src":"images/highway_service/highway_service_69.jpeg","filename":"highway_service_69.jpeg","size":268643,"thumb":"thumbs/highway_service/highway_service_69.jpg"},{"src":"images/highway_service/highway_service_70.jpeg","filename":"highway_service_70.jpeg","size":254392,"thumb":"thumbs/highway_service/highway_service_70.jpg"},{"src":"images/highway_service/highway_service_71.jpeg","filename":"highway_service_71.jpeg","size":258282,"thumb":"thumbs/highway_service/highway_service_71.jpg"},{"src":"images/highway_service/highway_service_72.jpeg","filename":"highway_service_72.jpeg","size":37256,"thumb":"thumbs/highway_service/highway_service_72.jpg"},{"src":"images/highway_service/highway_service_73.jpeg","filename":"highway_service_73.jpeg","size":257312,"thumb":"thumbs/highway_service/highway_service_73.jpg"},{"src":"images/highway_service/highway_service_74.jpeg","filename":"highway_service_74.jpeg","size":154803,"thumb":"thumbs/highway_service/highway_service_74.jpg"},{"src":"images/highway_service/highway_service_75.jpeg","filename":"highway_service_75.jpeg","size":194839,"thumb":"thumbs/highway_service/highway_service_75.jpg"},{"src":"images/highway_service/highway_service_76.jpeg","filename":"highway_service_76.jpeg","size":204504,"thumb":"thumbs/highway_service/highway_service_76.jpg"},{"src":"images/highway_service/highway_service_77.jpeg","filename":"highway_service_77.jpeg","size":271441,"thumb":"thumbs/highway_service/highway_service_77.jpg"},{"src":"images/highway_service/highway_service_78.jpeg","filename":"highway_service_78.jpeg","size":38954,"thumb":"thumbs/highway_service/highway_service_78.jpg"},{"src":"images/highway_service/highway_service_79.jpeg","filename":"highway_service_79.jpeg","size":50441,"thumb":"thumbs/highway_service/highway_service_79.jpg"},{"src":"images/highway_service/highway_service_80.jpeg","filename":"highway_service_80.jpeg","size":246406,"thumb":"thumbs/highway_service/highway_service_80.jpg"},{"src":"images/highway_service/highway_service_81.jpeg","filename":"highway_service_81.jpeg","size":43122,"thumb":"thumbs/highway_service/highway_service_81.jpg"},{"src":"images/highway_service/highway_service_82.jpeg","filename":"highway_service_82.jpeg","size":232094,"thumb":"thumbs/highway_service/highway_service_82.jpg"},{"src":"images/highway_service/highway_service_83.jpeg","filename":"highway_service_83.jpeg","size":40741,"thumb":"thumbs/highway_service/highway_service_83.jpg"},{"src":"images/highway_service/highway_service_84.jpeg","filename":"highway_service_84.jpeg","size":244744,"thumb":"thumbs/highway_service/highway_service_84.jpg"}]}]}],"instance_count":7}, "wang_villa": {"key": "wang_villa", "name_zh": "王家别墅", "name_en": "Wang Family Villa", "source": "王家别墅Wang Family Villa.docx", "image_count": 53, "locations": [{"title": "别墅（鹤庆县）", "base": "别墅", "location": "鹤庆县", "instances": [{"label": "#1", "seq": 1, "desc": "1.别墅（鹤庆县）——路程34公里，55分钟。别墅（鹤庆县）——路程：34公里，50分钟。4. Villa (Heqing County) — Distance: 34 km, driving time: 50 minutes · This one seems to be the tackiest in what Baishun found, probably our preferred one with Near. · 地点：丽江南South of Lijiang", "images": [{"src": "images/wang_villa/wang_villa_01.jpeg", "filename": "wang_villa_01.jpeg", "size": 34974, "thumb": "thumbs/wang_villa/wang_villa_01.jpg"}, {"src": "images/wang_villa/wang_villa_02.jpeg", "filename": "wang_villa_02.jpeg", "size": 31457, "thumb": "thumbs/wang_villa/wang_villa_02.jpg"}, {"src": "images/wang_villa/wang_villa_03.jpeg", "filename": "wang_villa_03.jpeg", "size": 32702, "thumb": "thumbs/wang_villa/wang_villa_03.jpg"}, {"src": "images/wang_villa/wang_villa_04.jpeg", "filename": "wang_villa_04.jpeg", "size": 36314, "thumb": "thumbs/wang_villa/wang_villa_04.jpg"}, {"src": "images/wang_villa/wang_villa_05.jpeg", "filename": "wang_villa_05.jpeg", "size": 56108, "thumb": "thumbs/wang_villa/wang_villa_05.jpg"}, {"src": "images/wang_villa/wang_villa_06.jpeg", "filename": "wang_villa_06.jpeg", "size": 65198, "thumb": "thumbs/wang_villa/wang_villa_06.jpg"}, {"src": "images/wang_villa/wang_villa_07.jpeg", "filename": "wang_villa_07.jpeg", "size": 49313, "thumb": "thumbs/wang_villa/wang_villa_07.jpg"}, {"src": "images/wang_villa/wang_villa_08.jpeg", "filename": "wang_villa_08.jpeg", "size": 32345, "thumb": "thumbs/wang_villa/wang_villa_08.jpg"}]}, {"label": "#2", "seq": 2, "desc": "2.别墅（鹤庆县）——路程，35公里，45分钟。1. Villa (Heqing County) — Distance: 35 km, driving time: 45 minutes · 别墅地理位置不好，两侧建筑太多，大门不够豪华。The villa has a poor location, too many buildings on both sides, and the main gate is not luxurious enough. · 地点：丽江南South of Lijiang", "images": [{"src": "images/wang_villa/wang_villa_09.jpeg", "filename": "wang_villa_09.jpeg", "size": 50735, "thumb": "thumbs/wang_villa/wang_villa_09.jpg"}, {"src": "images/wang_villa/wang_villa_10.jpeg", "filename": "wang_villa_10.jpeg", "size": 47538, "thumb": "thumbs/wang_villa/wang_villa_10.jpg"}, {"src": "images/wang_villa/wang_villa_11.jpeg", "filename": "wang_villa_11.jpeg", "size": 34479, "thumb": "thumbs/wang_villa/wang_villa_11.jpg"}, {"src": "images/wang_villa/wang_villa_12.jpeg", "filename": "wang_villa_12.jpeg", "size": 53581, "thumb": "thumbs/wang_villa/wang_villa_12.jpg"}, {"src": "images/wang_villa/wang_villa_13.jpeg", "filename": "wang_villa_13.jpeg", "size": 48193, "thumb": "thumbs/wang_villa/wang_villa_13.jpg"}, {"src": "images/wang_villa/wang_villa_14.jpeg", "filename": "wang_villa_14.jpeg", "size": 50245, "thumb": "thumbs/wang_villa/wang_villa_14.jpg"}, {"src": "images/wang_villa/wang_villa_15.jpeg", "filename": "wang_villa_15.jpeg", "size": 49557, "thumb": "thumbs/wang_villa/wang_villa_15.jpg"}, {"src": "images/wang_villa/wang_villa_16.jpeg", "filename": "wang_villa_16.jpeg", "size": 54184, "thumb": "thumbs/wang_villa/wang_villa_16.jpg"}, {"src": "images/wang_villa/wang_villa_17.jpeg", "filename": "wang_villa_17.jpeg", "size": 45107, "thumb": "thumbs/wang_villa/wang_villa_17.jpg"}, {"src": "images/wang_villa/wang_villa_18.jpeg", "filename": "wang_villa_18.jpeg", "size": 49398, "thumb": "thumbs/wang_villa/wang_villa_18.jpg"}, {"src": "images/wang_villa/wang_villa_19.jpeg", "filename": "wang_villa_19.jpeg", "size": 45543, "thumb": "thumbs/wang_villa/wang_villa_19.jpg"}, {"src": "images/wang_villa/wang_villa_20.jpeg", "filename": "wang_villa_20.jpeg", "size": 49204, "thumb": "thumbs/wang_villa/wang_villa_20.jpg"}]}, {"label": "#3", "seq": 3, "desc": "3.别墅（鹤庆县）——路程，35公里，45分钟。2. Villa (Heqing County) — Distance: 35 km, driving time: 45 minutes · 别墅地理位置不好，周围建筑太多，建筑风格混搭。The villa has a poor location, with too many surrounding buildings and a mix of architectural styles.", "images": [{"src": "images/wang_villa/wang_villa_21.jpeg", "filename": "wang_villa_21.jpeg", "size": 39669, "thumb": "thumbs/wang_villa/wang_villa_21.jpg"}, {"src": "images/wang_villa/wang_villa_22.jpeg", "filename": "wang_villa_22.jpeg", "size": 42872, "thumb": "thumbs/wang_villa/wang_villa_22.jpg"}, {"src": "images/wang_villa/wang_villa_23.jpeg", "filename": "wang_villa_23.jpeg", "size": 48015, "thumb": "thumbs/wang_villa/wang_villa_23.jpg"}, {"src": "images/wang_villa/wang_villa_24.jpeg", "filename": "wang_villa_24.jpeg", "size": 56986, "thumb": "thumbs/wang_villa/wang_villa_24.jpg"}, {"src": "images/wang_villa/wang_villa_25.jpeg", "filename": "wang_villa_25.jpeg", "size": 51476, "thumb": "thumbs/wang_villa/wang_villa_25.jpg"}, {"src": "images/wang_villa/wang_villa_26.jpeg", "filename": "wang_villa_26.jpeg", "size": 50269, "thumb": "thumbs/wang_villa/wang_villa_26.jpg"}]}, {"label": "#4", "seq": 4, "desc": "5.别墅（鹤庆县）——路程：34公里，50分钟。4. Villa (Heqing County) — Distance: 34 km, driving time: 50 minutes · 地点：丽江南South of Lijiang", "images": [{"src": "images/wang_villa/wang_villa_45.jpeg", "filename": "wang_villa_45.jpeg", "size": 55717, "thumb": "thumbs/wang_villa/wang_villa_45.jpg"}, {"src": "images/wang_villa/wang_villa_46.jpeg", "filename": "wang_villa_46.jpeg", "size": 38122, "thumb": "thumbs/wang_villa/wang_villa_46.jpg"}, {"src": "images/wang_villa/wang_villa_47.jpeg", "filename": "wang_villa_47.jpeg", "size": 43243, "thumb": "thumbs/wang_villa/wang_villa_47.jpg"}, {"src": "images/wang_villa/wang_villa_48.jpeg", "filename": "wang_villa_48.jpeg", "size": 26723, "thumb": "thumbs/wang_villa/wang_villa_48.jpg"}]}], "title_en": "Villa, Heqing County"}, {"title": "别墅（敏儒下村）", "base": "别墅", "location": "敏儒下村", "instances": [{"label": "", "seq": null, "desc": "4.别墅（敏儒下村）——路程：10公里，20分钟。Villa — Minru Xia Village · 地点：丽江东East of Lijiang", "images": [{"src": "images/wang_villa/wang_villa_27.jpeg", "filename": "wang_villa_27.jpeg", "size": 48439, "thumb": "thumbs/wang_villa/wang_villa_27.jpg"}, {"src": "images/wang_villa/wang_villa_28.jpeg", "filename": "wang_villa_28.jpeg", "size": 44370, "thumb": "thumbs/wang_villa/wang_villa_28.jpg"}, {"src": "images/wang_villa/wang_villa_29.jpeg", "filename": "wang_villa_29.jpeg", "size": 50902, "thumb": "thumbs/wang_villa/wang_villa_29.jpg"}, {"src": "images/wang_villa/wang_villa_30.jpeg", "filename": "wang_villa_30.jpeg", "size": 55672, "thumb": "thumbs/wang_villa/wang_villa_30.jpg"}, {"src": "images/wang_villa/wang_villa_31.jpeg", "filename": "wang_villa_31.jpeg", "size": 40088, "thumb": "thumbs/wang_villa/wang_villa_31.jpg"}, {"src": "images/wang_villa/wang_villa_32.png", "filename": "wang_villa_32.png", "size": 296189, "thumb": "thumbs/wang_villa/wang_villa_32.jpg"}, {"src": "images/wang_villa/wang_villa_33.jpeg", "filename": "wang_villa_33.jpeg", "size": 44670, "thumb": "thumbs/wang_villa/wang_villa_33.jpg"}, {"src": "images/wang_villa/wang_villa_34.jpeg", "filename": "wang_villa_34.jpeg", "size": 52909, "thumb": "thumbs/wang_villa/wang_villa_34.jpg"}, {"src": "images/wang_villa/wang_villa_35.jpeg", "filename": "wang_villa_35.jpeg", "size": 35374, "thumb": "thumbs/wang_villa/wang_villa_35.jpg"}, {"src": "images/wang_villa/wang_villa_36.jpeg", "filename": "wang_villa_36.jpeg", "size": 36265, "thumb": "thumbs/wang_villa/wang_villa_36.jpg"}, {"src": "images/wang_villa/wang_villa_37.jpeg", "filename": "wang_villa_37.jpeg", "size": 25479, "thumb": "thumbs/wang_villa/wang_villa_37.jpg"}, {"src": "images/wang_villa/wang_villa_38.jpeg", "filename": "wang_villa_38.jpeg", "size": 38766, "thumb": "thumbs/wang_villa/wang_villa_38.jpg"}, {"src": "images/wang_villa/wang_villa_39.jpeg", "filename": "wang_villa_39.jpeg", "size": 36277, "thumb": "thumbs/wang_villa/wang_villa_39.jpg"}, {"src": "images/wang_villa/wang_villa_40.jpeg", "filename": "wang_villa_40.jpeg", "size": 35238, "thumb": "thumbs/wang_villa/wang_villa_40.jpg"}, {"src": "images/wang_villa/wang_villa_41.jpeg", "filename": "wang_villa_41.jpeg", "size": 38849, "thumb": "thumbs/wang_villa/wang_villa_41.jpg"}, {"src": "images/wang_villa/wang_villa_42.jpeg", "filename": "wang_villa_42.jpeg", "size": 43219, "thumb": "thumbs/wang_villa/wang_villa_42.jpg"}, {"src": "images/wang_villa/wang_villa_43.jpeg", "filename": "wang_villa_43.jpeg", "size": 33284, "thumb": "thumbs/wang_villa/wang_villa_43.jpg"}, {"src": "images/wang_villa/wang_villa_44.jpeg", "filename": "wang_villa_44.jpeg", "size": 36709, "thumb": "thumbs/wang_villa/wang_villa_44.jpg"}]}], "title_en": "Villa, Minruxia Village"}, {"title": "宝亮家（向阳村）", "base": "宝亮家", "location": "向阳村", "instances": [{"label": "", "seq": null, "desc": "宝亮家（向阳村）——路程：30公里，50分钟。Director liked this one, maybe a backup? Definitely less grand than the others. It’s also a government building. · 在十八弯附近。 · 地点：丽江东南", "images": [{"src": "images/wang_villa/wang_villa_49.jpeg", "filename": "wang_villa_49.jpeg", "size": 6122496, "thumb": "thumbs/wang_villa/wang_villa_49.jpg"}, {"src": "images/wang_villa/wang_villa_50.jpeg", "filename": "wang_villa_50.jpeg", "size": 6561280, "thumb": "thumbs/wang_villa/wang_villa_50.jpg"}, {"src": "images/wang_villa/wang_villa_51.jpeg", "filename": "wang_villa_51.jpeg", "size": 36405, "thumb": "thumbs/wang_villa/wang_villa_51.jpg"}, {"src": "images/wang_villa/wang_villa_52.jpeg", "filename": "wang_villa_52.jpeg", "size": 51218, "thumb": "thumbs/wang_villa/wang_villa_52.jpg"}, {"src": "images/wang_villa/wang_villa_53.jpeg", "filename": "wang_villa_53.jpeg", "size": 161029, "thumb": "thumbs/wang_villa/wang_villa_53.jpg"}]}], "title_en": "Baoliang's Home, Xiangyang Village"}], "instance_count": 6}}};
+let flatImages = [];
+
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[c]);
+}
+function slug(s){ return (s||'').replace(/[^a-zA-Z0-9_-]+/g,'_'); }
+
+function locImageCount(loc) {
+  return loc.instances.reduce((s,i)=>s+i.images.length, 0);
+}
+
+// ── localStorage helpers for status & comments ──
+const LS_KEY = 'dlag_photo_data';
+function loadPhotoStore() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; }
+}
+function savePhotoStore(store) {
+  localStorage.setItem(LS_KEY, JSON.stringify(store));
+}
+function getPhotoData(id) {
+  const store = loadPhotoStore();
+  return store[id] || { status: '未筛选', comments: [] };
+}
+function setStatus(id, status) {
+  const store = loadPhotoStore();
+  if (!store[id]) store[id] = { status: '未筛选', comments: [] };
+  store[id].status = status;
+  savePhotoStore(store);
+}
+function getStatus(id) { return getPhotoData(id).status; }
+function getComments(id) { return getPhotoData(id).comments || []; }
+function addComment(id, text) {
+  const store = loadPhotoStore();
+  if (!store[id]) store[id] = { status: '未筛选', comments: [] };
+  store[id].comments.push({ text, created_at: new Date().toISOString() });
+  savePhotoStore(store);
+}
+function markDeleted(id) {
+  const store = loadPhotoStore();
+  if (!store[id]) store[id] = { status: '未筛选', comments: [] };
+  store[id].deleted = true;
+  savePhotoStore(store);
+}
+function isDeleted(id) { return !!getPhotoData(id).deleted; }
+
+// ── UUID generator ──
+function genUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+// ── Uploaded images ──
+let UPLOADED_IMAGES = []; // array of metadata entries from metadata.json (uploaded_images only)
+let idbDb = null;
+
+async function openIDB() {
+  if (idbDb) return idbDb;
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('dlag_uploads', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('images', { keyPath: 'id' });
+    req.onsuccess = e => { idbDb = e.target.result; res(idbDb); };
+    req.onerror = rej;
+  });
+}
+async function idbSave(id, blob) {
+  const db = await openIDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('images', 'readwrite');
+    tx.objectStore('images').put({ id, blob });
+    tx.oncomplete = res; tx.onerror = rej;
+  });
+}
+async function idbGet(id) {
+  const db = await openIDB();
+  return new Promise((res, rej) => {
+    const req = db.transaction('images').objectStore('images').get(id);
+    req.onsuccess = e => res(e.target.result?.blob);
+    req.onerror = rej;
+  });
+}
+async function idbDelete(id) {
+  const db = await openIDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('images', 'readwrite');
+    tx.objectStore('images').delete(id);
+    tx.oncomplete = res; tx.onerror = rej;
+  });
+}
+
+async function loadUploadedImages() {
+  try {
+    const res = await fetch('./data/metadata.json?t=' + Date.now());
+    if (!res.ok) throw new Error('fetch failed');
+    const items = await res.json();
+    const uploaded = items.filter(i => i.path && i.path.includes('uploaded_images'));
+    for (const item of uploaded) {
+      const blob = await idbGet(item.id);
+      if (blob) {
+        item._blobUrl = URL.createObjectURL(blob);
+      }
+    }
+    UPLOADED_IMAGES = uploaded;
+  } catch {
+    // No metadata.json available or fetch failed — UPLOADED_IMAGES stays empty
+    UPLOADED_IMAGES = [];
+  }
+}
+
+// ── Toast ──
+let toastTimer = null;
+function showToast(html, duration = 7000) {
+  const t = document.getElementById('toast');
+  t.innerHTML = html;
+  t.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('visible'), duration);
+}
+
+function makeTileHtml(im, fi) {
+  const imgId = im.src || im.path || '';
+  const st = getStatus(imgId);
+  const badgeHtml = st === '备选'
+    ? '<span class="tile-badge badge-pending">备</span>'
+    : st === '确定'
+    ? '<span class="tile-badge badge-confirmed">✓</span>'
+    : '';
+  const displaySrc = im._blobUrl || im.thumb || im.src || im.path || '';
+  const displayName = im.filename || im.name || im.id || '';
+  return `<div class="tile" data-idx="${fi}" data-img-id="${escapeHtml(imgId)}">
+    <img loading="lazy" src="${escapeHtml(displaySrc)}" alt="">
+    <div class="meta">${escapeHtml(displayName)}</div>
+    ${badgeHtml}
+  </div>`;
+}
+
+function render(filter) {
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+  flatImages = [];
+  const q = (filter.q || '').trim().toLowerCase();
+  const statusFilter = filter.status || 'all';
+  let totalShown = 0;
+
+  // Build map: catKey → uploaded images for that category
+  const uploadedByCat = {};
+  const uploadedCustom = []; // uploaded with custom/unrecognised category
+  for (const item of UPLOADED_IMAGES) {
+    const lvls = item.levels || [];
+    const catLabel = lvls[1] || '';
+    // Find matching category by name_zh
+    const catKey = Object.keys(DATA.categories).find(k =>
+      DATA.categories[k].name_zh === catLabel || DATA.categories[k].name_en === catLabel || k === catLabel
+    );
+    if (catKey) {
+      if (!uploadedByCat[catKey]) uploadedByCat[catKey] = [];
+      uploadedByCat[catKey].push(item);
+    } else {
+      uploadedCustom.push(item);
+    }
+  }
+
+  for (const [groupKey, group] of Object.entries(DATA.groups)) {
+    if (filter.group !== 'all' && filter.group !== groupKey) continue;
+    const cats = group.items.map(k => DATA.categories[k]).filter(Boolean);
+
+    let groupVisibleImages = 0;
+    let catSections = [];
+
+    for (const cat of cats) {
+      let locSections = [];
+      let catVisible = 0;
+      let visibleLocs = 0;
+      let visibleInstances = 0;
+
+      for (const loc of cat.locations) {
+        const visibleInsts = loc.instances.filter(inst => {
+          if (!q) return true;
+          return (
+            loc.title.toLowerCase().includes(q) ||
+            (loc.title_en || '').toLowerCase().includes(q) ||
+            (inst.desc || '').toLowerCase().includes(q) ||
+            cat.name_zh.toLowerCase().includes(q) ||
+            cat.name_en.toLowerCase().includes(q) ||
+            inst.images.some(im => (im.filename||'').toLowerCase().includes(q))
+          );
+        });
+        if (visibleInsts.length === 0) continue;
+
+        const multiInst = loc.instances.length > 1;
+        const instHtml = visibleInsts.map(inst => {
+          const labelHtml = inst.label
+            ? `<span class="inst-label">${escapeHtml(inst.label)}</span>`
+            : '';
+          const visibleImages = inst.images.filter(im => {
+            if (isDeleted(im.src)) return false;
+            if (statusFilter === 'all') return true;
+            return getStatus(im.src) === statusFilter;
+          });
+          if (visibleImages.length === 0) return '';
+          const tilesHtml = visibleImages.map(im => {
+            const fi = flatImages.length;
+            flatImages.push({
+              ...im,
+              catName: cat.name_zh,
+              catEn: cat.name_en,
+              locName: loc.title,
+              locEn: loc.title_en || '',
+              instLabel: inst.label,
+              instDesc: inst.desc || ''
+            });
+            return makeTileHtml(im, fi);
+          }).join('');
+          catVisible += visibleImages.length;
+          return `
+            <div class="instance ${inst.label ? '' : 'no-label'}">
+              ${inst.label ? `<div class="inst-head">${labelHtml}<span class="inst-num">${visibleImages.length} 张</span></div>` : ''}
+              ${inst.desc ? `<p class="inst-desc">${escapeHtml(inst.desc)}</p>` : ''}
+              <div class="grid">${tilesHtml}</div>
+            </div>
+          `;
+        }).join('');
+
+        if (!instHtml.trim()) continue;
+        const locImgs = visibleInsts.reduce((s,i)=>s+i.images.length, 0);
+        visibleLocs += 1;
+        visibleInstances += visibleInsts.length;
+
+        locSections.push(`
+          <section class="location" id="loc-${slug(cat.key)}-${slug(loc.title)}">
+            <div class="loc-head">
+              <h4 class="loc-title">${escapeHtml(loc.title)}</h4>
+              ${loc.title_en ? `<span class="loc-en">${escapeHtml(loc.title_en)}</span>` : ''}
+              <span class="loc-count">${locImgs} 张</span>
+              ${multiInst ? `<span class="loc-multi">同名地点 ${loc.instances.length} 处</span>` : ''}
+            </div>
+            ${instHtml}
+          </section>
+        `);
+      }
+
+      // Render uploaded images for this category
+      const catUploads = (uploadedByCat[cat.key] || []).filter(item => {
+        const imgId = item.path || item.id;
+        if (isDeleted(imgId)) return false;
+        if (statusFilter !== 'all' && getStatus(imgId) !== statusFilter) return false;
+        if (!q) return true;
+        const haystack = [item.name, item.notes, ...(item.levels || [])].join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+      if (catUploads.length > 0) {
+        const uploadTiles = catUploads.map(item => {
+          const fi = flatImages.length;
+          const imgObj = {
+            src: item._blobUrl || item.path,
+            path: item.path,
+            filename: item.name || item.id,
+            thumb: item._blobUrl || item.path,
+            catName: cat.name_zh,
+            catEn: cat.name_en,
+            locName: (item.levels || [])[2] || '',
+            locEn: '',
+            instLabel: '',
+            instDesc: item.notes || ''
+          };
+          flatImages.push(imgObj);
+          catVisible += 1;
+          return makeTileHtml(imgObj, fi);
+        }).join('');
+
+        if (locSections.length > 0) {
+          // Inject tiles into the last grid of the last location section
+          const last = locSections[locSections.length - 1];
+          const gridOpen = last.lastIndexOf('<div class="grid">');
+          const gridClose = last.indexOf('</div>', gridOpen + 16);
+          locSections[locSections.length - 1] =
+            last.slice(0, gridClose) + uploadTiles + last.slice(gridClose);
+        } else {
+          locSections.push(`<div class="instance no-label"><div class="grid">${uploadTiles}</div></div>`);
+        }
+      }
+
+      if (locSections.length === 0) continue;
+
+      groupVisibleImages += catVisible;
+      catSections.push(`
+        <section class="category" id="cat-${cat.key}">
+          <div class="cat-head">
+            <h3 class="cat-title">${escapeHtml(cat.name_zh)}</h3>
+            <span class="cat-en">${escapeHtml(cat.name_en)}</span>
+            <span class="cat-count">${catVisible} 张</span>
+            <span class="cat-meta">· ${visibleLocs} 个地点 / ${visibleInstances} 处具体地点</span>
+          </div>
+          ${locSections.join('')}
+        </section>
+      `);
+    }
+
+    if (catSections.length === 0) continue;
+    totalShown += groupVisibleImages;
+
+    main.insertAdjacentHTML('beforeend', `
+      <section class="group" id="group-${groupKey}">
+        <div class="group-head">
+          <span class="group-icon">${group.icon}</span>
+          <h2 class="group-title">${escapeHtml(group.title_zh)}</h2>
+          <span class="group-en">${escapeHtml(group.title_en)}</span>
+          <span class="group-count">${groupVisibleImages} 张</span>
+        </div>
+        ${catSections.join('')}
+      </section>
+    `);
+  }
+
+  // Render custom-category uploaded images
+  if (filter.group === 'all') {
+    const customUploads = uploadedCustom.filter(item => {
+      const imgId = item.path || item.id;
+      if (isDeleted(imgId)) return false;
+      if (statusFilter !== 'all' && getStatus(imgId) !== statusFilter) return false;
+      if (!q) return true;
+      const haystack = [item.name, item.notes, ...(item.levels || [])].join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
+    if (customUploads.length > 0) {
+      let customCount = 0;
+      const tiles = customUploads.map(item => {
+        const fi = flatImages.length;
+        const imgObj = {
+          src: item._blobUrl || item.path,
+          path: item.path,
+          filename: item.name || item.id,
+          thumb: item._blobUrl || item.path,
+          catName: (item.levels || [])[1] || '自定义',
+          catEn: 'Custom',
+          locName: (item.levels || [])[2] || '已上传',
+          locEn: '',
+          instLabel: '',
+          instDesc: item.notes || ''
+        };
+        flatImages.push(imgObj);
+        customCount++;
+        return makeTileHtml(imgObj, fi);
+      }).join('');
+      totalShown += customCount;
+      main.insertAdjacentHTML('beforeend', `
+        <section class="group" id="group-__custom__">
+          <div class="group-head">
+            <span class="group-icon">📤</span>
+            <h2 class="group-title">自定义上传</h2>
+            <span class="group-en">Custom Uploads</span>
+            <span class="group-count">${customCount} 张</span>
+          </div>
+          <section class="category">
+            <div class="grid" style="margin-top:12px;">${tiles}</div>
+          </section>
+        </section>
+      `);
+    }
+  }
+
+  if (totalShown === 0) {
+    main.innerHTML = `<div class="empty">没有匹配的图片 · No images matched.</div>`;
+  }
+
+  document.querySelectorAll('.tile').forEach(t => {
+    t.addEventListener('click', () => openLightbox(parseInt(t.dataset.idx)));
+  });
+}
+
+function buildHeader() {
+  let imgTotal = 0, locTotal = 0, instTotal = 0;
+  for (const c of Object.values(DATA.categories)) {
+    imgTotal += c.image_count;
+    locTotal += c.locations.length;
+    instTotal += c.instance_count;
+  }
+  const catTotal = Object.keys(DATA.categories).length;
+  const groupTotal = Object.keys(DATA.groups).length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><span class="num">${imgTotal}</span><span class="label">张图 Images</span></div>
+    <div class="stat"><span class="num">${locTotal}</span><span class="label">地点 Locations</span></div>
+    <div class="stat"><span class="num">${instTotal}</span><span class="label">具体地点 Instances</span></div>
+    <div class="stat"><span class="num">${catTotal}</span><span class="label">场景 Scenes</span></div>
+    <div class="stat"><span class="num">${groupTotal}</span><span class="label">大类 Groups</span></div>
+  `;
+
+  const gf = document.getElementById('group-filters');
+  let chips = `<div class="chip active" data-group="all">全部 All</div>`;
+  for (const [k, g] of Object.entries(DATA.groups)) {
+    chips += `<div class="chip" data-group="${k}">${g.icon} ${escapeHtml(g.title_zh)}</div>`;
+  }
+  gf.innerHTML = chips;
+  gf.querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', () => {
+      gf.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+      currentFilter.group = c.dataset.group;
+      render(currentFilter);
+    });
+  });
+
+  // TOC: list every location
+  const tocGrid = document.getElementById('toc-grid');
+  const links = [];
+  for (const [groupKey, group] of Object.entries(DATA.groups)) {
+    links.push(`<a href="#group-${groupKey}" style="grid-column: 1 / -1; font-weight:600; color:var(--ink); margin-top:6px;">${group.icon} ${escapeHtml(group.title_zh)}</a>`);
+    for (const k of group.items) {
+      const cat = DATA.categories[k];
+      if (!cat) continue;
+      for (const loc of cat.locations) {
+        const n = locImageCount(loc);
+        const tag = loc.instances.length > 1 ? ` ×${loc.instances.length}` : '';
+        links.push(`<a href="#loc-${slug(cat.key)}-${slug(loc.title)}">· ${escapeHtml(cat.name_zh)} / ${escapeHtml(loc.title)}${tag} <span style="color:var(--ink-faint);">(${n})</span></a>`);
+      }
+    }
+  }
+  tocGrid.innerHTML = links.join('');
+}
+
+const currentFilter = { q: '', group: 'all', status: 'all' };
+
+document.getElementById('search').addEventListener('input', e => {
+  currentFilter.q = e.target.value;
+  render(currentFilter);
+});
+
+// Status filter chips
+document.getElementById('status-filters').querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.getElementById('status-filters').querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    currentFilter.status = c.dataset.status;
+    render(currentFilter);
+  });
+});
+
+// Lightbox
+const lb = document.getElementById('lightbox');
+const lbImg = document.getElementById('lb-img');
+const lbCaption = document.getElementById('lb-caption');
+const lbMeta = document.getElementById('lb-meta');
+let lbIdx = 0;
+let currentImageId = '';
+
+function openLightbox(idx) {
+  lbIdx = idx;
+  showLightboxImage();
+  lb.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function refreshLightboxStatus() {
+  const st = getStatus(currentImageId);
+  const lbl = document.getElementById('lb-status-label');
+  const btnP = document.getElementById('lb-btn-pending');
+  const btnC = document.getElementById('lb-btn-confirm');
+  lbl.textContent = st;
+  lbl.className = 'lb-status-label' + (st === '备选' ? ' is-pending' : st === '确定' ? ' is-confirmed' : '');
+  btnP.className = 'lb-action-btn' + (st === '备选' ? ' active-pending' : '');
+  btnC.className = 'lb-action-btn' + (st === '确定' ? ' active-confirmed' : '');
+  // Update tile badge in gallery if visible
+  const tile = document.querySelector(`.tile[data-img-id="${CSS.escape(currentImageId)}"]`);
+  if (tile) {
+    const existing = tile.querySelector('.tile-badge');
+    if (existing) existing.remove();
+    if (st === '备选') tile.insertAdjacentHTML('beforeend', '<span class="tile-badge badge-pending">备</span>');
+    else if (st === '确定') tile.insertAdjacentHTML('beforeend', '<span class="tile-badge badge-confirmed">✓</span>');
+  }
+}
+
+function refreshLightboxComments() {
+  const comments = getComments(currentImageId);
+  const list = document.getElementById('lb-comments-list');
+  const header = document.getElementById('lb-comments-header');
+  header.textContent = `评论 Comments (${comments.length})`;
+  if (comments.length === 0) {
+    list.innerHTML = '<div style="color:#6b6660;font-size:12px;">暂无评论 · No comments yet</div>';
+    return;
+  }
+  list.innerHTML = comments.map(c => {
+    const d = new Date(c.created_at);
+    const dateStr = `${d.getMonth()+1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return `<div class="lb-comment-item">${escapeHtml(c.text)}<span class="lb-comment-time">${dateStr}</span></div>`;
+  }).join('');
+  list.scrollTop = list.scrollHeight;
+}
+
+function showLightboxImage() {
+  const im = flatImages[lbIdx];
+  if (!im) return;
+  lbImg.src = im._blobUrl || im.src || im.path || '';
+  lbImg.alt = im.filename || '';
+  lbCaption.textContent = im.instDesc || im.notes || '';
+  const labelPart = im.instLabel ? ` ${im.instLabel}` : '';
+  lbMeta.textContent = `${im.catName} › ${im.locName}${labelPart}${im.locEn ? ' (' + im.locEn + ')' : ''} · ${im.filename || im.name || ''} · ${lbIdx + 1} / ${flatImages.length}`;
+  currentImageId = im.src || im.path || '';
+  refreshLightboxStatus();
+  refreshLightboxComments();
+}
+
+function closeLightbox() {
+  lb.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('lb-close').addEventListener('click', closeLightbox);
+document.getElementById('lb-prev').addEventListener('click', () => {
+  lbIdx = (lbIdx - 1 + flatImages.length) % flatImages.length;
+  showLightboxImage();
+});
+document.getElementById('lb-next').addEventListener('click', () => {
+  lbIdx = (lbIdx + 1) % flatImages.length;
+  showLightboxImage();
+});
+lb.addEventListener('click', e => { if (e.target === lb) closeLightbox(); });
+document.addEventListener('keydown', e => {
+  if (!lb.classList.contains('active')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') document.getElementById('lb-prev').click();
+  if (e.key === 'ArrowRight') document.getElementById('lb-next').click();
+});
+
+document.getElementById('lb-btn-pending').addEventListener('click', () => {
+  setStatus(currentImageId, getStatus(currentImageId) === '备选' ? '未筛选' : '备选');
+  refreshLightboxStatus();
+});
+document.getElementById('lb-btn-confirm').addEventListener('click', () => {
+  setStatus(currentImageId, getStatus(currentImageId) === '确定' ? '未筛选' : '确定');
+  refreshLightboxStatus();
+});
+document.getElementById('lb-btn-reset').addEventListener('click', () => {
+  setStatus(currentImageId, '未筛选');
+  refreshLightboxStatus();
+});
+document.getElementById('lb-comment-submit').addEventListener('click', () => {
+  const input = document.getElementById('lb-comment-text');
+  const text = input.value.trim();
+  if (!text) return;
+  addComment(currentImageId, text);
+  input.value = '';
+  refreshLightboxComments();
+});
+document.getElementById('lb-comment-text').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById('lb-comment-submit').click();
+  }
+});
+
+// Sticky header shrink on scroll
+window.addEventListener('scroll', () => {
+  const h = document.getElementById('header');
+  if (window.scrollY > 200) h.classList.add('shrunk'); else h.classList.remove('shrunk');
+});
+
+// ── Upload Modal ──
+const uploadOverlay = document.getElementById('upload-overlay');
+let selectedFiles = []; // {file: File, name: string, blobUrl: string}
+
+function openUploadModal() {
+  selectedFiles = [];
+  uploadOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  populateGroupSelect();
+  document.getElementById('upload-file').value = '';
+  document.getElementById('upload-file-grid').innerHTML = '';
+  document.getElementById('upload-drop-hint').style.display = '';
+  document.getElementById('upload-count-wrap').style.display = 'none';
+  document.getElementById('upload-progress-bar').style.display = 'none';
+  document.getElementById('upload-progress-label').textContent = '';
+  document.getElementById('up-notes').value = '';
+  updateSubmitBtn();
+}
+
+function closeUploadModal() {
+  uploadOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('upload-btn').addEventListener('click', openUploadModal);
+document.getElementById('upload-close').addEventListener('click', closeUploadModal);
+document.getElementById('upload-cancel').addEventListener('click', closeUploadModal);
+uploadOverlay.addEventListener('click', e => { if (e.target === uploadOverlay) closeUploadModal(); });
+
+function updateSubmitBtn() {
+  const btn = document.getElementById('upload-submit');
+  if (selectedFiles.length === 0) {
+    btn.textContent = '请先选择图片';
+    btn.disabled = true;
+  } else {
+    btn.textContent = `上传 ${selectedFiles.length} 张图片`;
+    btn.disabled = false;
+  }
+}
+
+function renderFileGrid() {
+  const grid = document.getElementById('upload-file-grid');
+  const hint = document.getElementById('upload-drop-hint');
+  const countWrap = document.getElementById('upload-count-wrap');
+  const countBadge = document.getElementById('upload-count-badge');
+
+  if (selectedFiles.length === 0) {
+    grid.innerHTML = '';
+    hint.style.display = '';
+    countWrap.style.display = 'none';
+    updateSubmitBtn();
+    return;
+  }
+
+  hint.style.display = 'none';
+  countWrap.style.display = '';
+  countBadge.textContent = `已选 ${selectedFiles.length} 张`;
+
+  grid.innerHTML = selectedFiles.map((item, i) => `
+    <div class="upload-file-item">
+      <img class="upload-file-thumb" src="${item.blobUrl}" alt="">
+      <button class="upload-file-remove" data-idx="${i}" title="移除">✕</button>
+      <input class="upload-file-name" type="text" value="${escapeHtml(item.name)}" data-idx="${i}" placeholder="图片名称">
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('.upload-file-remove').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.idx);
+      URL.revokeObjectURL(selectedFiles[idx].blobUrl);
+      selectedFiles.splice(idx, 1);
+      renderFileGrid();
+      updateSubmitBtn();
+    });
+  });
+
+  grid.querySelectorAll('.upload-file-name').forEach(input => {
+    input.addEventListener('input', e => {
+      selectedFiles[parseInt(input.dataset.idx)].name = e.target.value;
+    });
+    // Prevent click on input from triggering the file picker (input is inside drop zone)
+    input.addEventListener('click', e => e.stopPropagation());
+  });
+
+  updateSubmitBtn();
+}
+
+function addFiles(fileList) {
+  const images = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+  for (const file of images) {
+    const name = file.name.replace(/\.[^.]+$/, '');
+    const blobUrl = URL.createObjectURL(file);
+    selectedFiles.push({ file, name, blobUrl });
+  }
+  renderFileGrid();
+}
+
+document.getElementById('upload-file').addEventListener('change', e => {
+  addFiles(e.target.files);
+  // Reset so same files can be re-selected if needed
+  e.target.value = '';
+});
+
+const uploadDrop = document.getElementById('upload-drop');
+uploadDrop.addEventListener('dragover', e => { e.preventDefault(); uploadDrop.classList.add('dragover'); });
+uploadDrop.addEventListener('dragleave', () => uploadDrop.classList.remove('dragover'));
+uploadDrop.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadDrop.classList.remove('dragover');
+  addFiles(e.dataTransfer.files);
+});
+
+// Cascade selects
+function populateGroupSelect() {
+  const sel = document.getElementById('up-group');
+  sel.innerHTML = '<option value="">请选择大类…</option>';
+  for (const [k, g] of Object.entries(DATA.groups)) {
+    sel.innerHTML += `<option value="${k}">${g.icon} ${escapeHtml(g.title_zh)}</option>`;
+  }
+  sel.innerHTML += '<option value="__custom__">✏️ 自定义…</option>';
+  document.getElementById('up-group-custom').style.display = 'none';
+  resetCatSelect();
+}
+
+function resetCatSelect() {
+  const sel = document.getElementById('up-cat');
+  sel.innerHTML = '<option value="">请先选择大类…</option>';
+  sel.disabled = true;
+  document.getElementById('up-cat-custom').style.display = 'none';
+  resetLocSelect();
+}
+
+function resetLocSelect() {
+  const sel = document.getElementById('up-loc');
+  sel.innerHTML = '<option value="">请先选择场景…</option>';
+  sel.disabled = true;
+  document.getElementById('up-loc-custom').style.display = 'none';
+}
+
+document.getElementById('up-group').addEventListener('change', function() {
+  const val = this.value;
+  const customInput = document.getElementById('up-group-custom');
+  customInput.style.display = val === '__custom__' ? '' : 'none';
+  if (val && val !== '__custom__') {
+    const catSel = document.getElementById('up-cat');
+    catSel.innerHTML = '<option value="">请选择场景…</option>';
+    const items = DATA.groups[val]?.items || [];
+    for (const k of items) {
+      const cat = DATA.categories[k];
+      if (cat) catSel.innerHTML += `<option value="${k}">${escapeHtml(cat.name_zh)}</option>`;
+    }
+    catSel.innerHTML += '<option value="__custom__">✏️ 自定义…</option>';
+    catSel.disabled = false;
+  } else {
+    resetCatSelect();
+  }
+});
+
+document.getElementById('up-cat').addEventListener('change', function() {
+  const val = this.value;
+  const customInput = document.getElementById('up-cat-custom');
+  customInput.style.display = val === '__custom__' ? '' : 'none';
+  if (val && val !== '__custom__') {
+    const locSel = document.getElementById('up-loc');
+    locSel.innerHTML = '<option value="">请选择地点…</option>';
+    const locs = DATA.categories[val]?.locations || [];
+    for (const loc of locs) {
+      locSel.innerHTML += `<option value="${escapeHtml(loc.title)}">${escapeHtml(loc.title)}</option>`;
+    }
+    locSel.innerHTML += '<option value="__custom__">✏️ 自定义…</option>';
+    locSel.disabled = false;
+  } else {
+    resetLocSelect();
+  }
+});
+
+document.getElementById('up-loc').addEventListener('change', function() {
+  const customInput = document.getElementById('up-loc-custom');
+  customInput.style.display = this.value === '__custom__' ? '' : 'none';
+});
+
+// Save upload (batch)
+document.getElementById('upload-submit').addEventListener('click', async () => {
+  if (selectedFiles.length === 0) return;
+
+  const groupVal = document.getElementById('up-group').value;
+  const groupCustom = document.getElementById('up-group-custom').value.trim();
+  const catVal = document.getElementById('up-cat').value;
+  const catCustom = document.getElementById('up-cat-custom').value.trim();
+  const locVal = document.getElementById('up-loc').value;
+  const locCustom = document.getElementById('up-loc-custom').value.trim();
+  const notes = document.getElementById('up-notes').value.trim();
+
+  const groupLabel = groupVal === '__custom__' ? groupCustom : (DATA.groups[groupVal]?.title_zh || groupCustom || '');
+  const catLabel = catVal === '__custom__' ? catCustom : (DATA.categories[catVal]?.name_zh || catCustom || '');
+  const locLabel = locVal === '__custom__' ? locCustom : (locVal || locCustom || '');
+
+  // Show progress UI
+  const progressBar = document.getElementById('upload-progress-bar');
+  const progressFill = document.getElementById('upload-progress-fill');
+  const progressLabel = document.getElementById('upload-progress-label');
+  const submitBtn = document.getElementById('upload-submit');
+  progressBar.style.display = '';
+  submitBtn.disabled = true;
+
+  const total = selectedFiles.length;
+  const allMetadata = [];
+  let savedToDisk = false;
+
+  // Get FSA directory handle once (prompt only once for the whole batch)
+  let dirHandle = null;
+  let dataDir = null;
+  let imagesDir = null;
+  if ('showDirectoryPicker' in window) {
+    try {
+      if (!window._fsaDirHandle) {
+        window._fsaDirHandle = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'desktop' });
+      }
+      dirHandle = window._fsaDirHandle;
+      dataDir = await dirHandle.getDirectoryHandle('data', { create: true });
+      imagesDir = await dataDir.getDirectoryHandle('uploaded_images', { create: true });
+      savedToDisk = true;
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        // User cancelled directory picker — continue with IndexedDB only
+        submitBtn.disabled = false;
+      } else {
+        console.warn('FSA init failed:', err);
+      }
+    }
+  }
+
+  // Read existing metadata.json once
+  let existingMeta = [];
+  if (savedToDisk && dataDir) {
+    try {
+      const mh = await dataDir.getFileHandle('metadata.json');
+      existingMeta = JSON.parse(await (await mh.getFile()).text());
+    } catch { existingMeta = []; }
+  }
+
+  // Process each file
+  for (let i = 0; i < total; i++) {
+    const item = selectedFiles[i];
+    progressLabel.textContent = `正在上传 ${i + 1} / ${total}…`;
+    progressFill.style.width = `${((i) / total) * 100}%`;
+
+    const id = genUUID();
+    const ext = item.file.name.split('.').pop().toLowerCase();
+    const filename = `${id}.${ext}`;
+    const relPath = `data/uploaded_images/${filename}`;
+    const name = item.name.trim() || item.file.name;
+
+    const blob = new Blob([await item.file.arrayBuffer()], { type: item.file.type });
+    await idbSave(id, blob);
+
+    const metadata = {
+      id, path: relPath,
+      levels: [groupLabel, catLabel, locLabel],
+      name, notes,
+      status: '未筛选', comments: [],
+      created_at: new Date().toISOString(),
+      _blobUrl: item.blobUrl
+    };
+
+    // Write image file to disk
+    if (savedToDisk && imagesDir) {
+      try {
+        const fh = await imagesDir.getFileHandle(filename, { create: true });
+        const w = await fh.createWritable();
+        await w.write(blob);
+        await w.close();
+      } catch (err) { console.warn('FSA write failed for', filename, err); }
+    }
+
+    allMetadata.push(metadata);
+    UPLOADED_IMAGES.push(metadata);
+  }
+
+  // Write metadata.json once with all new entries
+  if (savedToDisk && dataDir) {
+    try {
+      const cleanEntries = allMetadata.map(m => { const c = {...m}; delete c._blobUrl; return c; });
+      existingMeta.push(...cleanEntries);
+      const mh = await dataDir.getFileHandle('metadata.json', { create: true });
+      const mw = await mh.createWritable();
+      await mw.write(JSON.stringify(existingMeta, null, 2));
+      await mw.close();
+    } catch (err) { console.warn('metadata.json write failed:', err); }
+  }
+
+  progressFill.style.width = '100%';
+  progressLabel.textContent = `✅ 已完成 ${total} 张`;
+  render(currentFilter);
+
+  // GitHub sync
+  if (isGithubConfigured()) {
+    progressLabel.textContent = `⟳ 正在同步至 GitHub…`;
+    let ghOk = false;
+    try {
+      const uploadPromises = allMetadata.map(async (meta, i) => {
+        const item = selectedFiles[i];
+        if (!item) return false;
+        const b64 = await blobToBase64(new Blob([await item.file.arrayBuffer()], { type: item.file.type }));
+        return ghPut(meta.path, b64, `Upload photo: ${meta.name}`);
+      });
+      const results = await Promise.all(uploadPromises);
+      const metaOk = await ghSyncMetadata();
+      ghOk = results.every(Boolean) && metaOk;
+    } catch (err) { console.warn('GitHub sync error:', err); }
+    setTimeout(() => {
+      closeUploadModal();
+      showToast(ghOk
+        ? `✅ ${total} 张图片已同步至 GitHub`
+        : `⚠ 图片已上传到图库，但 GitHub 同步失败，请检查 Token 和网络`, 6000);
+    }, 400);
+  } else {
+    setTimeout(() => {
+      closeUploadModal();
+      showToast(`✅ ${total} 张图片已存入浏览器。点击 "GitHub 同步" 按钮配置后可自动同步至 GitHub。`, 7000);
+    }, 600);
+  }
+});
+
+// ── GitHub Sync ──
+const GH_KEY = 'dlag_github_config';
+function getGithubConfig() {
+  try { return JSON.parse(localStorage.getItem(GH_KEY) || '{}'); } catch { return {}; }
+}
+function saveGithubConfig(cfg) { localStorage.setItem(GH_KEY, JSON.stringify(cfg)); }
+function isGithubConfigured() {
+  const c = getGithubConfig();
+  return !!(c.token && c.repo);
+}
+
+function updateGithubBtn() {
+  const btn = document.getElementById('github-btn');
+  const lbl = document.getElementById('github-btn-label');
+  if (isGithubConfigured()) {
+    btn.classList.add('connected');
+    lbl.textContent = '已连接 GitHub';
+  } else {
+    btn.classList.remove('connected');
+    lbl.textContent = 'GitHub 同步';
+  }
+}
+
+function textToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+async function blobToBase64(blob) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function ghFetch(path, options = {}) {
+  const cfg = getGithubConfig();
+  const [owner, repo] = (cfg.repo || '/').split('/');
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+  return fetch(url, {
+    ...options,
+    headers: {
+      Authorization: `token ${cfg.token}`,
+      Accept: 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+}
+
+async function ghGetSHA(path) {
+  const cfg = getGithubConfig();
+  const branch = cfg.branch || 'main';
+  const resp = await ghFetch(`${path}?ref=${branch}`);
+  if (!resp.ok) return null;
+  const data = await resp.json();
+  return data.sha || null;
+}
+
+async function ghPut(path, base64Content, message) {
+  const cfg = getGithubConfig();
+  const sha = await ghGetSHA(path);
+  const body = { message, content: base64Content, branch: cfg.branch || 'main' };
+  if (sha) body.sha = sha;
+  const resp = await ghFetch(path, { method: 'PUT', body: JSON.stringify(body) });
+  return resp.ok;
+}
+
+async function ghDelete(path, message) {
+  const cfg = getGithubConfig();
+  const sha = await ghGetSHA(path);
+  if (!sha) return true;
+  const resp = await ghFetch(path, {
+    method: 'DELETE',
+    body: JSON.stringify({ message, sha, branch: cfg.branch || 'main' })
+  });
+  return resp.ok;
+}
+
+async function ghSyncMetadata() {
+  const cfg = getGithubConfig();
+  // Read current metadata.json from GitHub to preserve non-uploaded entries
+  let nonUploaded = [];
+  try {
+    const branch = cfg.branch || 'main';
+    const resp = await ghFetch(`data/metadata.json?ref=${branch}`);
+    if (resp.ok) {
+      const data = await resp.json();
+      const all = JSON.parse(atob(data.content.replace(/\n/g, '')));
+      nonUploaded = all.filter(e => !e.path?.includes('uploaded_images'));
+    }
+  } catch {}
+  const currentUploaded = UPLOADED_IMAGES
+    .filter(item => !isDeleted(item.path || item.id))
+    .map(item => { const c = { ...item }; delete c._blobUrl; return c; });
+  const newJson = JSON.stringify([...nonUploaded, ...currentUploaded], null, 2);
+  return ghPut('data/metadata.json', textToBase64(newJson), 'Update metadata.json [gallery sync]');
+}
+
+// GitHub config modal
+const ghcfgOverlay = document.getElementById('ghcfg-overlay');
+function openGhcfg() {
+  const cfg = getGithubConfig();
+  document.getElementById('ghcfg-token').value = cfg.token || '';
+  document.getElementById('ghcfg-repo').value = cfg.repo || 'lexi-44/DLAG-location_scout';
+  document.getElementById('ghcfg-branch').value = cfg.branch || 'main';
+  document.getElementById('ghcfg-status').style.display = 'none';
+  ghcfgOverlay.classList.add('active');
+}
+function closeGhcfg() { ghcfgOverlay.classList.remove('active'); }
+
+document.getElementById('github-btn').addEventListener('click', openGhcfg);
+document.getElementById('ghcfg-cancel').addEventListener('click', closeGhcfg);
+ghcfgOverlay.addEventListener('click', e => { if (e.target === ghcfgOverlay) closeGhcfg(); });
+
+document.getElementById('ghcfg-save').addEventListener('click', () => {
+  const cfg = {
+    token: document.getElementById('ghcfg-token').value.trim(),
+    repo: document.getElementById('ghcfg-repo').value.trim(),
+    branch: document.getElementById('ghcfg-branch').value.trim() || 'main'
+  };
+  saveGithubConfig(cfg);
+  updateGithubBtn();
+  closeGhcfg();
+  showToast(isGithubConfigured() ? '✅ GitHub 同步已配置' : '⚠ 配置已清除', 3000);
+});
+
+document.getElementById('ghcfg-test').addEventListener('click', async () => {
+  const statusEl = document.getElementById('ghcfg-status');
+  const token = document.getElementById('ghcfg-token').value.trim();
+  const repo = document.getElementById('ghcfg-repo').value.trim();
+  if (!token || !repo) { statusEl.textContent = '请先填写 Token 和仓库'; statusEl.className = 'ghcfg-status err'; statusEl.style.display = ''; return; }
+  statusEl.textContent = '连接测试中…'; statusEl.className = 'ghcfg-status'; statusEl.style.display = '';
+  try {
+    const [owner, repoName] = repo.split('/');
+    const resp = await fetch(`https://api.github.com/repos/${owner}/${repoName}`, {
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    if (resp.ok) {
+      statusEl.textContent = '✅ 连接成功！'; statusEl.className = 'ghcfg-status ok';
+    } else {
+      statusEl.textContent = `❌ 失败 (${resp.status}) — 检查 Token 和仓库名`; statusEl.className = 'ghcfg-status err';
+    }
+  } catch {
+    statusEl.textContent = '❌ 网络错误'; statusEl.className = 'ghcfg-status err';
+  }
+  statusEl.style.display = '';
+});
+
+// ── Delete photo ──
+async function deletePhoto(imageId) {
+  markDeleted(imageId);
+  closeLightbox();
+  render(currentFilter);
+
+  const isUploaded = imageId.includes('uploaded_images');
+  const uploadedItem = UPLOADED_IMAGES.find(i => (i.path || i.id) === imageId);
+
+  if (isUploaded && uploadedItem) {
+    const idx = UPLOADED_IMAGES.indexOf(uploadedItem);
+    if (idx !== -1) UPLOADED_IMAGES.splice(idx, 1);
+    try { await idbDelete(uploadedItem.id); } catch {}
+
+    if (isGithubConfigured()) {
+      showToast('🗑 正在从 GitHub 删除…', 60000);
+      const filename = imageId.split('/').pop();
+      const [imgOk, metaOk] = await Promise.all([
+        ghDelete(imageId, `Delete uploaded photo: ${uploadedItem.name || filename}`),
+        ghSyncMetadata()
+      ]);
+      showToast(imgOk && metaOk ? '✅ 已从 GitHub 删除' : '⚠ 已从图库移除，但 GitHub 同步失败，请检查配置', 5000);
+    } else {
+      const filename = imageId.split('/').pop();
+      showToast(`🗑 已从图库移除。配置 GitHub 同步后可自动同步，或手动运行：<code class="toast-code">git rm data/uploaded_images/${escapeHtml(filename)} && git add data/metadata.json && git commit -m "Delete" && git push</code>`, 10000);
+    }
+  } else {
+    // Existing DATA image
+    const thumbPath = imageId.replace(/^images\//, 'thumbs/').replace(/\.jpeg$/, '.jpg');
+    if (isGithubConfigured()) {
+      showToast('🗑 正在从 GitHub 删除…', 60000);
+      const [imgOk, thumbOk] = await Promise.all([
+        ghDelete(imageId, `Delete photo: ${imageId.split('/').pop()}`),
+        ghDelete(thumbPath, `Delete thumb: ${thumbPath.split('/').pop()}`)
+      ]);
+      showToast(imgOk ? '✅ 已从 GitHub 删除' : '⚠ 图库已隐藏，但 GitHub 删除失败（文件可能不存在）', 5000);
+    } else {
+      showToast(`🗑 已从图库中隐藏。配置 GitHub 同步后可自动删除，或手动运行：<code class="toast-code">git rm ${escapeHtml(imageId)} ${escapeHtml(thumbPath)} && git commit -m "Delete" && git push</code>`, 10000);
+    }
+  }
+}
+
+// Confirmation dialog
+const confirmOverlay = document.getElementById('confirm-overlay');
+let pendingDeleteId = '';
+
+function showDeleteConfirm(imageId, displayName) {
+  pendingDeleteId = imageId;
+  document.getElementById('confirm-photo-name').textContent = displayName || imageId;
+  confirmOverlay.classList.add('active');
+}
+function hideDeleteConfirm() {
+  confirmOverlay.classList.remove('active');
+  pendingDeleteId = '';
+}
+
+document.getElementById('confirm-cancel').addEventListener('click', hideDeleteConfirm);
+document.getElementById('confirm-ok').addEventListener('click', async () => {
+  hideDeleteConfirm();
+  await deletePhoto(pendingDeleteId);
+});
+confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) hideDeleteConfirm(); });
+
+document.getElementById('lb-btn-delete').addEventListener('click', () => {
+  const im = flatImages[lbIdx];
+  if (!im) return;
+  const displayName = im.filename || im.name || currentImageId;
+  showDeleteConfirm(currentImageId, displayName);
+});
+
+// Initialize
+loadUploadedImages().then(() => {
+  buildHeader();
+  render(currentFilter);
+  updateGithubBtn();
+});
+</script>
+</body>
+</html>
